@@ -6,6 +6,7 @@ import { ProgressRing, Tile } from '../components/Bits';
 import { Icon } from '../icons';
 import { LESSONS, VERSE_OF_DAY } from '../data/lessons';
 import { useAppState, useTheme } from '../hooks/useAppState';
+import { getEntry, todayDateKey, formatDevotionalDate } from '../data/devotional';
 
 export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
   const navigate = useNavigate();
@@ -20,6 +21,14 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   const palette = t.palette;
   const curSectionsDone = state.progress[curLesson.id]?.sectionsDone || 0;
+  const devDateKey = todayDateKey();
+  const devAdded = state.devotional.status !== 'not-added';
+  const devMorningRead = !!state.devotional.read[`${devDateKey}:morning`];
+  const devEveningRead = !!state.devotional.read[`${devDateKey}:evening`];
+  const devBothRead = devMorningRead && devEveningRead;
+  const devEntry = getEntry(devDateKey, devMorningRead ? 'evening' : 'morning');
+  const devColor = palette[1];
+  const devPeriod = devMorningRead ? 'evening' : 'morning';
 
   return (
     <div style={{ padding: '0 0 24px' }}>
@@ -97,6 +106,73 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
           {curSectionsDone} of {curLesson.sections.length} sections · ~{curLesson.minutes} min
         </div>
       </button>
+
+      {/* Today's devotional card */}
+      {devAdded && (
+        <>
+          <SectionHeader t={t} title="Today's devotional" />
+          <button
+            onClick={() => navigate(`/devotional/${devDateKey}/${devPeriod}`)}
+            style={{
+              display: 'block', width: 'calc(100% - 36px)', margin: '0 18px',
+              background: t.paper, color: t.ink, borderRadius: t.radius,
+              border: `0.5px solid ${t.paperEdge}`, padding: '18px 20px',
+              textAlign: 'left', cursor: 'pointer',
+              boxShadow: '0 10px 30px -22px rgba(0,0,0,0.25)',
+              position: 'relative', overflow: 'hidden',
+            }}
+          >
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: devColor }} />
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: `${devColor}15`, color: devColor,
+                  padding: '4px 10px', borderRadius: 999,
+                  font: `600 11px ${t.fontUi}`, letterSpacing: 0.4,
+                  textTransform: 'uppercase', whiteSpace: 'nowrap',
+                }}>
+                  {devBothRead ? 'Both read today' : devMorningRead ? 'Evening' : 'Morning'} · {formatDevotionalDate(devDateKey)}
+                </div>
+                <div style={{ font: `500 24px/1.15 ${t.fontDisplay}`, marginTop: 10, color: t.ink, letterSpacing: -0.3 }}>
+                  Morning and Evening
+                </div>
+                <div style={{ font: `14px ${t.fontBody}`, color: t.inkSoft, marginTop: 4 }}>
+                  {devEntry?.scriptureRef ?? 'C.H. Spurgeon'}
+                </div>
+              </div>
+              <div style={{
+                width: 48, height: 48, borderRadius: 24, flexShrink: 0,
+                background: devColor, color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: `0 8px 20px -10px ${devColor}`,
+              }}>
+                <Icon name={devBothRead ? 'check' : 'sparkles'} size={18} filled={!devBothRead} />
+              </div>
+            </div>
+            {devMorningRead && !devBothRead && (
+              <div style={{
+                marginTop: 14, paddingTop: 12, borderTop: `0.5px solid ${t.rule}`,
+                display: 'flex', alignItems: 'center', gap: 6,
+                font: `12px ${t.fontUi}`, color: devColor,
+              }}>
+                <Icon name="check" size={12} color={devColor} stroke={2.2} />
+                Morning read · Tap for evening
+              </div>
+            )}
+            {devBothRead && (
+              <div style={{
+                marginTop: 14, paddingTop: 12, borderTop: `0.5px solid ${t.rule}`,
+                display: 'flex', alignItems: 'center', gap: 6,
+                font: `12px ${t.fontUi}`, color: devColor,
+              }}>
+                <Icon name="check" size={12} color={devColor} stroke={2.2} />
+                Both readings complete for today
+              </div>
+            )}
+          </button>
+        </>
+      )}
 
       {/* Share buttons */}
       <div style={{ margin: '12px 18px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>

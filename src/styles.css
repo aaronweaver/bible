@@ -1,0 +1,20 @@
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #f4f4f0;
+}
+body {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+*, *::before, *::after { box-sizing: border-box; }
+button { font-family: inherit; -webkit-tap-highlight-color: transparent; }
+textarea { font-family: inherit; }
+::-webkit-scrollbar { width: 0; height: 0; }
+@supports (padding: max(0px)) {
+  .safe-top { padding-top: max(env(safe-area-inset-top), 12px); }
+  .safe-bot { padding-bottom: max(env(safe-area-inset-bottom), 12px); }
+}

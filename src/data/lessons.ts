@@ -190,7 +190,10 @@ function parseSections(body: string): LessonSection[] {
 
 // Parse "Romans 3:23", "1 John 5:13", "Colossians 2:12-14" into book + chapter.
 export function parseVerseRef(ref: string): { book: string; chapter: number; verse?: number } | null {
-  const m = ref.trim().match(/^((?:\d\s)?[A-Za-z][A-Za-z ]*?)\s+(\d+)(?::(\d+))?/);
+  const normalized = ref.trim().replace(/^(III|II|I)\s+/, (_, r) =>
+    ({ 'I': '1', 'II': '2', 'III': '3' }[r as 'I' | 'II' | 'III']!) + ' '
+  );
+  const m = normalized.match(/^((?:\d\s)?[A-Za-z][A-Za-z ]*?)\s+(\d+)(?::(\d+))?/);
   if (!m) return null;
   return {
     book: m[1].trim(),

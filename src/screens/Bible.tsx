@@ -134,7 +134,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
                       ref={(el) => { verseRefs.current[num] = el; }}
                       onClick={() => toggleHighlight(key, num)} style={{
                         cursor: 'pointer',
-                        background: isHL ? `${accent.c}22` : (nav?.verse === num ? `${accent.c}11` : 'transparent'),
+                        background: isHL ? `${accent.c}38` : (nav?.verse === num ? `${accent.c}11` : 'transparent'),
                         borderRadius: 3, padding: '1px 2px', transition: 'background 0.15s',
                       }}>
                       <sup style={{

@@ -2,28 +2,33 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Theme } from '../theme';
 import { Icon } from '../icons';
-
-type Tab = { id: string; label: string; icon: string; path: string };
-
-const TABS: Tab[] = [
-  { id: 'today', label: 'Today', icon: 'home', path: '/' },
-  { id: 'bible', label: 'Bible', icon: 'book', path: '/bible' },
-  { id: 'lessons', label: 'Lessons', icon: 'lessons', path: '/lessons' },
-  { id: 'profile', label: 'Profile', icon: 'profile', path: '/profile' },
-];
+import { LESSONS } from '../data/lessons';
+import { useAppState } from '../hooks/useAppState';
 
 export function BottomNav({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { state } = useAppState();
   const isDark = t.statusDark;
+
+  const curLessonId = LESSONS.find((l) => !state.progress[l.id]?.completed)?.id ?? LESSONS[0].id;
 
   const activeId = (() => {
     if (pathname === '/' || pathname.startsWith('/today')) return 'today';
     if (pathname.startsWith('/bible')) return 'bible';
-    if (pathname.startsWith('/lessons')) return 'lessons';
+    if (pathname.match(/^\/lessons\/\d/)) return 'study';
+    if (pathname === '/lessons') return 'lessons';
     if (pathname.startsWith('/profile')) return 'profile';
     return '';
   })();
+
+  const TABS = [
+    { id: 'today',   label: 'Home',    icon: 'home',    path: '/' },
+    { id: 'bible',   label: 'Bible',   icon: 'book',    path: '/bible' },
+    { id: 'lessons', label: 'Lessons', icon: 'lessons', path: '/lessons' },
+    { id: 'study',   label: 'Study',   icon: 'bookmark', path: `/lessons/${curLessonId}` },
+    { id: 'profile', label: 'Profile', icon: 'profile', path: '/profile' },
+  ];
 
   return (
     <div
@@ -42,7 +47,7 @@ export function BottomNav({ t, accent }: { t: Theme; accent: { c: string; on: st
         border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
         borderRadius: 28,
         padding: 6,
-        display: 'flex', justifyContent: 'space-between', gap: 4,
+        display: 'flex', justifyContent: 'space-between', gap: 2,
         pointerEvents: 'auto',
         boxShadow: isDark
           ? '0 20px 40px -20px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.04)'
@@ -53,25 +58,31 @@ export function BottomNav({ t, accent }: { t: Theme; accent: { c: string; on: st
           return (
             <button
               key={tab.id}
-              onClick={() => navigate(tab.path)}
+              onClick={() => {
+                if (tab.id === 'bible' && activeId === 'bible') {
+                  navigate('/bible', { state: { openPicker: true } });
+                } else {
+                  navigate(tab.path);
+                }
+              }}
               aria-label={tab.label}
               style={{
                 flex: 1,
                 background: 'transparent',
                 border: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                padding: '8px 4px',
+                padding: '8px 2px',
                 color: active ? accent.on : t.inkSoft,
                 transition: 'color 0.2s',
               }}
             >
               <span style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: 40, height: 40, borderRadius: 20,
+                width: 36, height: 36, borderRadius: 18,
                 background: active ? accent.c : 'transparent',
                 transition: 'background 0.2s',
               }}>
-                <Icon name={tab.icon} size={22} filled={active} stroke={active ? 1.9 : 1.7} />
+                <Icon name={tab.icon} size={20} filled={active} stroke={active ? 1.9 : 1.7} />
               </span>
             </button>
           );

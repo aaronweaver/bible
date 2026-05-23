@@ -15,6 +15,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
   const nav = location.state as {
     book?: string; chapter?: number; verse?: number;
     returnTo?: string; returnLabel?: string;
+    openPicker?: boolean;
   } | null;
 
   const initial = nav?.book ? { book: nav.book, chapter: nav.chapter ?? 1 } : (state.lastRead ?? { book: 'John', chapter: 3 });
@@ -36,8 +37,9 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
     return () => { alive = false; };
   }, [book, chapter]);
 
-  // Respond to incoming nav (e.g. tapped a verse blockquote in a lesson)
+  // Respond to incoming nav (e.g. tapped a verse blockquote in a lesson, or re-tapped Bible tab)
   useEffect(() => {
+    if (nav?.openPicker) { setShowPicker(true); return; }
     if (nav?.book && (nav.book !== book || (nav.chapter ?? 1) !== chapter)) {
       setBook(nav.book);
       setChapter(nav.chapter ?? 1);
@@ -56,8 +58,8 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
   }, [verseCount, targetVerse, nav?.verse]);
 
   const maxChapter = BIBLE_BOOKS.find((b) => b.name === book)?.chapters ?? 1;
-  const prevChapter = () => { if (chapter > 1) setChapter(chapter - 1); };
-  const nextChapter = () => { if (chapter < maxChapter) setChapter(chapter + 1); };
+  const prevChapter = () => { if (chapter > 1) { setChapter(chapter - 1); window.scrollTo(0, 0); } };
+  const nextChapter = () => { if (chapter < maxChapter) { setChapter(chapter + 1); window.scrollTo(0, 0); } };
 
   const handleNavigate = ({ book: b, chapter: c, verse: v }: { book: string; chapter: number; verse: number }) => {
     setBook(b);
@@ -95,9 +97,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
           background: 'none', border: 'none', padding: 0, cursor: 'pointer',
           color: t.ink, font: `400 30px ${t.fontDisplay}`, letterSpacing: -0.4,
         }}>
-          <span style={isNumberedBook(book) ? { textDecoration: 'underline' } : undefined}>
-            {formatBookTitle(book)}
-          </span>
+          <span>{formatBookTitle(book)}</span>
           {' '}{chapter}
           <Icon name="chev-d" size={20} color={t.inkSoft} />
         </button>
@@ -278,9 +278,7 @@ function NavigationPicker({ t, accent, initialBook, initialChapter, onNavigate, 
                   cursor: 'pointer',
                 }}>
                   <div style={{ font: `400 18px ${t.fontDisplay}`, color: t.ink }}>
-                    {isNumberedBook(b.name)
-                      ? <><span style={{ textDecoration: 'underline' }}>{formatBookTitle(b.name)}</span></>
-                      : b.name}
+                    {formatBookTitle(b.name)}
                   </div>
                   <div style={{ font: `12px ${t.fontUi}`, color: t.inkMute }}>{b.chapters} ch</div>
                 </div>
@@ -296,9 +294,7 @@ function NavigationPicker({ t, accent, initialBook, initialChapter, onNavigate, 
                 <Icon name="chev-l" size={18} color={accent.c} />
               </button>
               <div style={{ font: `400 22px ${t.fontDisplay}`, color: t.ink, flex: 1 }}>
-                {isNumberedBook(pickerBook)
-                  ? <span style={{ textDecoration: 'underline' }}>{formatBookTitle(pickerBook)}</span>
-                  : pickerBook}
+                {formatBookTitle(pickerBook)}
               </div>
             </div>
             <div style={gridStyle}>
@@ -318,9 +314,7 @@ function NavigationPicker({ t, accent, initialBook, initialChapter, onNavigate, 
                 <Icon name="chev-l" size={18} color={accent.c} />
               </button>
               <div style={{ font: `400 22px ${t.fontDisplay}`, color: t.ink, flex: 1 }}>
-                {isNumberedBook(pickerBook)
-                  ? <span style={{ textDecoration: 'underline' }}>{formatBookTitle(pickerBook)}</span>
-                  : pickerBook}{' '}{pickerChapter}
+                {formatBookTitle(pickerBook)}{' '}{pickerChapter}
               </div>
             </div>
             <div style={gridStyle}>

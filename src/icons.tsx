@@ -43,8 +43,9 @@ export function Icon({ name, size = 22, color = 'currentColor', filled = false, 
     case 'book':
       return (
         <svg style={s} viewBox="0 0 24 24">
-          <path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5C4.7 19 4 18.3 4 17.5v-12zM20 5.5C20 4.7 19.3 4 18.5 4H13v15h5.5c.8 0 1.5-.7 1.5-1.5v-12z" {...p} fill={filled ? color : 'none'} />
-          <path d="M11 4v15M13 4v15" {...p} />
+          <path d="M2 5c0-1 .7-1.5 1.5-1.5C5 3.5 8 4.5 12 4.5s7-1 8.5-1C21.3 3.5 22 4 22 5v14c0 1-.7 1.5-1.5 1.5C19 20.5 16 19.5 12 19.5s-7 1-8.5 1C2.7 20.5 2 20 2 19V5z" {...p} fill={filled ? color : 'none'} />
+          <path d="M12 4.5v15" {...p} fill="none" />
+          <path d="M6 8.5c1 .3 2.5.5 4 .5M6 12c1 .3 2.5.5 4 .5M14 8.5c1-.3 2.5-.5 4-.5M14 12c1-.3 2.5-.5 4-.5" {...p} fill="none" />
         </svg>
       );
     case 'lessons':

@@ -102,7 +102,7 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
       <div style={{ margin: '12px 18px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <button
           onClick={() => {
-            const msg = encodeURIComponent('Study the Bible with me! https://aaronweaver.github.io/bible/');
+            const msg = encodeURIComponent('Come and study the Bible with me! https://aaronweaver.github.io/bible/');
             window.open(`sms:?body=${msg}`);
           }}
           style={{
@@ -119,7 +119,7 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
             borderRadius: t.radiusSm, padding: '12px 10px',
             font: `600 13px ${t.fontUi}`, cursor: 'pointer', letterSpacing: 0.1,
           }}>
-          Request a Study Partner
+          Request a Bible Study Partner
         </button>
       </div>
 

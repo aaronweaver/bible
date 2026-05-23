@@ -136,7 +136,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
                         cursor: 'pointer',
                         background: isHL
                           ? (dark ? '#fbbf2455' : `${accent.c}66`)
-                          : (nav?.verse === num ? `${accent.c}11` : 'transparent'),
+                          : (nav?.verse === num ? (dark ? '#fbbf2433' : `${accent.c}44`) : 'transparent'),
                         borderRadius: 3, padding: '1px 2px', transition: 'background 0.15s',
                       }}>
                       <sup style={{

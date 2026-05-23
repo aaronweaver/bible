@@ -1,0 +1,74 @@
+[
+  {
+    "id": "bible-sequential",
+    "title": "Bible in a Year",
+    "subtitle": "Sequential · 365 days",
+    "description": "Read through the entire Bible from Genesis to Revelation in one year, following the canonical book order.",
+    "totalDays": 365,
+    "accentIndex": 0,
+    "icon": "book"
+  },
+  {
+    "id": "bible-chronological",
+    "title": "Bible in a Year",
+    "subtitle": "Chronological · 365 days",
+    "description": "Read the Bible in the order events occurred — from creation through Revelation — placing each book in its historical context.",
+    "totalDays": 365,
+    "accentIndex": 2,
+    "icon": "book"
+  },
+  {
+    "id": "bible-mccheyne",
+    "title": "Bible in a Year",
+    "subtitle": "M'Cheyne · 365 days",
+    "description": "Robert Murray M'Cheyne's classic 1843 plan — 3–4 readings per day from both Testaments simultaneously, with the NT read twice.",
+    "totalDays": 365,
+    "accentIndex": 4,
+    "icon": "book"
+  },
+  {
+    "id": "nt-90",
+    "title": "New Testament in 90 Days",
+    "subtitle": "90 days · ~3 chapters/day",
+    "description": "Read through the entire New Testament — Matthew through Revelation — in just 90 days.",
+    "totalDays": 90,
+    "accentIndex": 3,
+    "icon": "bookmark"
+  },
+  {
+    "id": "proverbs-31",
+    "title": "Proverbs in 31 Days",
+    "subtitle": "31 days · 1 chapter/day",
+    "description": "One chapter of Proverbs per day for a month of practical wisdom from Solomon.",
+    "totalDays": 31,
+    "accentIndex": 1,
+    "icon": "sparkles"
+  },
+  {
+    "id": "psalms-30",
+    "title": "Psalms in 30 Days",
+    "subtitle": "30 days · 5 chapters/day",
+    "description": "Read all 150 Psalms in 30 days — a month of prayer, praise, lament, and worship.",
+    "totalDays": 30,
+    "accentIndex": 5,
+    "icon": "sparkles"
+  },
+  {
+    "id": "gospels-30",
+    "title": "The Gospels in 30 Days",
+    "subtitle": "30 days · ~3 chapters/day",
+    "description": "Read all four Gospel accounts of Jesus' life and ministry — Matthew, Mark, Luke, and John — in one month.",
+    "totalDays": 30,
+    "accentIndex": 0,
+    "icon": "bookmark"
+  },
+  {
+    "id": "sotm-7",
+    "title": "Sermon on the Mount",
+    "subtitle": "7 days · Matthew 5–7",
+    "description": "Jesus' most famous teaching — the Beatitudes, the Lord's Prayer, and the Golden Rule — studied in seven focused days.",
+    "totalDays": 7,
+    "accentIndex": 2,
+    "icon": "sparkles"
+  }
+]

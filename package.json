@@ -10,6 +10,7 @@
     "lessons:build": "node scripts/convert-pdfs.mjs",
     "kjv:fetch": "node scripts/fetch-kjv.mjs",
     "devotional:fetch": "node scripts/fetch-morning-evening.mjs",
+    "plans:build": "node scripts/generate-reading-plans.mjs",
     "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Theme } from '../theme';
 import { TopBar, DarkToggle, SectionHeader } from '../components/TopBar';
@@ -7,6 +7,7 @@ import { Icon } from '../icons';
 import { LESSONS, VERSE_OF_DAY } from '../data/lessons';
 import { useAppState, useTheme } from '../hooks/useAppState';
 import { getEntry, todayDateKey, formatDevotionalDate } from '../data/devotional';
+import { READING_PLANS_META, getPlanDays, readingsLabel, planProgressPct, type ReadingDay } from '../data/readingPlans';
 
 export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
   const navigate = useNavigate();
@@ -29,6 +30,26 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
   const devEntry = getEntry(devDateKey, devMorningRead ? 'evening' : 'morning');
   const devColor = palette[1];
   const devPeriod = devMorningRead ? 'evening' : 'morning';
+
+  // Featured reading plan (lowest progress % among in-progress plans)
+  const activePlans = READING_PLANS_META.filter(
+    m => state.readingPlans[m.id]?.status === 'in-progress'
+  ).sort((a, b) => {
+    const pa = planProgressPct(state.readingPlans[a.id], a.totalDays);
+    const pb = planProgressPct(state.readingPlans[b.id], b.totalDays);
+    return pa - pb;
+  });
+  const featuredPlan = activePlans[0] ?? null;
+  const featuredProg = featuredPlan ? state.readingPlans[featuredPlan.id] : null;
+  const [featuredDays, setFeaturedDays] = useState<ReadingDay[] | null>(null);
+  useEffect(() => {
+    if (!featuredPlan) { setFeaturedDays(null); return; }
+    getPlanDays(featuredPlan.id).then(setFeaturedDays);
+  }, [featuredPlan?.id]);
+  const featuredDay = featuredDays?.find(d => d.day === featuredProg?.currentDay);
+  const featuredLabel = featuredDay
+    ? readingsLabel(featuredDay.readings)
+    : (featuredPlan?.subtitle ?? '');
 
   return (
     <div style={{ padding: '0 0 24px' }}>
@@ -171,6 +192,68 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
               </div>
             )}
           </button>
+        </>
+      )}
+
+      {/* Today's reading plan */}
+      {featuredPlan && featuredProg && (
+        <>
+          <SectionHeader t={t} title="Today's reading" />
+          <button
+            onClick={() => navigate(`/plan/${featuredPlan.id}/day/${featuredProg.currentDay}`)}
+            style={{
+              display: 'block', width: 'calc(100% - 36px)', margin: '0 18px',
+              background: t.paper, color: t.ink, borderRadius: t.radius,
+              border: `0.5px solid ${t.paperEdge}`, padding: '18px 20px',
+              textAlign: 'left', cursor: 'pointer',
+              boxShadow: '0 10px 30px -22px rgba(0,0,0,0.25)',
+            }}
+          >
+            {(() => {
+              const planColor = t.palette[featuredPlan.accentIndex];
+              return (
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      background: `${planColor}15`, color: planColor,
+                      padding: '4px 10px', borderRadius: 999,
+                      font: `600 11px ${t.fontUi}`, letterSpacing: 0.4,
+                      textTransform: 'uppercase', whiteSpace: 'nowrap',
+                    }}>
+                      Day {featuredProg.currentDay} of {featuredPlan.totalDays}
+                    </div>
+                    <div style={{ font: `500 24px/1.15 ${t.fontDisplay}`, marginTop: 10, color: t.ink, letterSpacing: -0.3 }}>
+                      {featuredPlan.title}
+                    </div>
+                    <div style={{ font: `14px ${t.fontBody}`, color: t.inkSoft, marginTop: 4 }}>
+                      {featuredLabel}
+                    </div>
+                  </div>
+                  <div style={{
+                    width: 48, height: 48, borderRadius: 24,
+                    background: planColor, color: '#fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    boxShadow: `0 8px 20px -10px ${planColor}`,
+                  }}>
+                    <Icon name={featuredPlan.icon as any} size={20} filled />
+                  </div>
+                </div>
+              );
+            })()}
+          </button>
+          {activePlans.length > 1 && (
+            <button
+              onClick={() => navigate('/lessons')}
+              style={{
+                display: 'block', width: 'calc(100% - 36px)', margin: '8px 18px 0',
+                background: 'none', border: 'none', cursor: 'pointer',
+                font: `13px ${t.fontUi}`, color: t.inkMute, textAlign: 'center', padding: '4px 0',
+              }}
+            >
+              +{activePlans.length - 1} more active {activePlans.length - 1 === 1 ? 'plan' : 'plans'} →
+            </button>
+          )}
         </>
       )}
 

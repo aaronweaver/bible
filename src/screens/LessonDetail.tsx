@@ -124,7 +124,7 @@ export function LessonDetail({ t, accent }: { t: Theme; accent: { c: string; on:
       <div style={{ padding: '8px 22px 0' }}>
         {lesson.sections.map((s, i) => (
           <Section key={i} t={t} accent={accent} fontScale={fontScale}
-            idx={i} total={totalSections} section={s} lesson={lesson}
+            idx={i} total={totalSections} section={s} lesson={{ id: lesson.id, title: lesson.title, subtitle: lesson.subtitle }}
             reflection={lp.reflections?.[i] || ''}
             answers={lp.answers ?? {}}
             onReflect={(v) => setReflection(lesson.id, i, v)}
@@ -197,7 +197,7 @@ function Section({
   onReflect, onAnswerSlot, onView,
 }: {
   t: Theme; accent: { c: string; on: string }; fontScale: number; idx: number; total: number;
-  section: LessonSection; lesson: { id: number; title: string };
+  section: LessonSection; lesson: { id: number; title: string; subtitle: string };
   reflection: string;
   answers: Record<string, string>;
   onReflect: (v: string) => void;
@@ -206,6 +206,7 @@ function Section({
 }) {
   const navigate = useNavigate();
   const ref = useRef<HTMLDivElement>(null);
+  const [showQuiz, setShowQuiz] = useState(false);
   useEffect(() => {
     if (!ref.current) return;
     const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) onView(); },
@@ -266,31 +267,27 @@ function Section({
       ))}
 
       {section.questions && (
-        <div style={{ marginTop: 8 }}>
-          <div style={{
-            font: `600 11px ${t.fontUi}`, letterSpacing: 1.4,
-            textTransform: 'uppercase', color: accent.c, marginBottom: 14,
-          }}>Quiz</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {section.questions.map((q) => (
-              <QuizCard key={q.num} t={t} accent={accent} fontScale={fontScale}
-                q={q}
-                getAnswer={(slot) => answers[`${idx}:${q.num}:${slot}`] || ''}
-                onAnswerSlot={(slot, v) => onAnswerSlot(idx, q.num, slot, v)}
-                onRef={openVerse} />
-            ))}
-          </div>
-          <button
-            onClick={() => {}}
-            style={{
-              marginTop: 20, width: '100%',
-              background: accent.c, color: accent.on, border: 'none',
-              borderRadius: 14, padding: '15px 20px',
-              font: `600 15px ${t.fontUi}`, cursor: 'pointer', letterSpacing: 0.1,
-            }}>
-            Share results with a friend
+        <>
+          <button onClick={() => setShowQuiz(true)} style={{
+            marginTop: 8, width: '100%',
+            background: accent.c, color: accent.on, border: 'none',
+            borderRadius: 14, padding: '15px 20px',
+            font: `600 15px ${t.fontUi}`, cursor: 'pointer', letterSpacing: 0.1,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}>
+            Take the Quiz
           </button>
-        </div>
+          {showQuiz && (
+            <QuizSheet
+              t={t} accent={accent} fontScale={fontScale}
+              lessonId={lesson.id} lessonTitle={lesson.title}
+              questions={section.questions}
+              getAnswer={(qNum, slot) => answers[`${idx}:${qNum}:${slot}`] || ''}
+              onAnswerSlot={(qNum, slot, v) => onAnswerSlot(idx, qNum, slot, v)}
+              onClose={() => setShowQuiz(false)}
+            />
+          )}
+        </>
       )}
 
       {/* answers above — reflect below */}
@@ -333,120 +330,218 @@ function Section({
   );
 }
 
-function QuizCard({
-  t, accent, fontScale, q, getAnswer, onAnswerSlot, onRef,
+function QuizSheet({
+  t, accent, fontScale, lessonId, lessonTitle, questions, getAnswer, onAnswerSlot, onClose,
 }: {
   t: Theme; accent: { c: string; on: string }; fontScale: number;
-  q: Question;
-  getAnswer: (slot: string) => string;
-  onAnswerSlot: (slot: string, v: string) => void;
-  onRef: (ref: string) => void;
+  lessonId: number; lessonTitle: string;
+  questions: Question[];
+  getAnswer: (qNum: number, slot: string) => string;
+  onAnswerSlot: (qNum: number, slot: string, v: string) => void;
+  onClose: () => void;
 }) {
+  const [current, setCurrent] = useState(0);
+  const [done, setDone] = useState(false);
+  const total = questions.length;
+  const q = questions[current];
+
+  const handleNext = () => {
+    if (current < total - 1) setCurrent(current + 1);
+    else setDone(true);
+  };
+  const handlePrev = () => { if (current > 0) setCurrent(current - 1); };
+
   return (
     <div style={{
-      padding: '16px', background: t.paper,
-      border: `0.5px solid ${t.paperEdge}`, borderRadius: 14,
+      position: 'fixed', inset: 0, zIndex: 50,
+      display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
     }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: q.type === 'open' ? 10 : 14 }}>
-        <span style={{
-          flexShrink: 0, minWidth: 24, height: 24, borderRadius: 12,
-          background: `${accent.c}18`, color: accent.c,
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          font: `600 11px ${t.fontUi}`,
-        }}>{q.num}</span>
-        <div style={{ font: `400 ${15 * fontScale}px/1.6 ${t.fontBody}`, color: t.ink }}>
-          {q.type === 'blank' ? (
-            <BlankPrompt
-              prompt={q.prompt} accent={accent} ink={t.ink} bg={t.bg}
-              fontBody={t.fontBody} fontScale={fontScale}
-              getBlank={(i) => getAnswer(`b${i}`)}
-              onBlank={(i, v) => onAnswerSlot(`b${i}`, v)}
-              onRef={onRef}
-            />
+      {/* backdrop */}
+      <div onClick={onClose} style={{
+        position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)',
+      }} />
+
+      {/* sheet */}
+      <div style={{
+        position: 'relative', background: t.bg,
+        borderRadius: '24px 24px 0 0',
+        maxHeight: '92vh', display: 'flex', flexDirection: 'column',
+        paddingBottom: 32,
+        animation: 'slideUp 0.3s cubic-bezier(0.32,0.72,0,1)',
+      }}>
+        <style>{`@keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }`}</style>
+
+        {/* drag handle */}
+        <div style={{ width: 36, height: 4, background: t.rule, borderRadius: 2, margin: '12px auto 0' }} />
+
+        {/* header */}
+        <div style={{ padding: '16px 20px 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ font: `600 11px ${t.fontUi}`, letterSpacing: 1.5, textTransform: 'uppercase', color: accent.c }}>
+              Lesson {lessonId} · Quiz
+            </div>
+            <div style={{ font: `400 22px/1.1 ${t.fontDisplay}`, color: t.ink, marginTop: 4, letterSpacing: -0.3 }}>
+              {lessonTitle}
+            </div>
+          </div>
+          <button onClick={onClose} style={{
+            width: 34, height: 34, borderRadius: 17,
+            background: t.paper, border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            color: t.inkSoft, font: `500 16px ${t.fontUi}`,
+          }}>✕</button>
+        </div>
+
+        {/* progress bar */}
+        {!done && (
+          <div style={{ padding: '14px 20px 0', display: 'flex', gap: 4 }}>
+            {questions.map((_, i) => (
+              <div key={i} style={{
+                flex: 1, height: 4, borderRadius: 2,
+                background: i <= current ? accent.c : t.rule,
+                transition: 'background 0.2s',
+              }} />
+            ))}
+          </div>
+        )}
+
+        {/* content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 0' }}>
+          {done ? (
+            <div style={{ textAlign: 'center', padding: '40px 0 20px' }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: 32, background: `${accent.c}18`,
+                color: accent.c, margin: '0 auto 20px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                font: `600 28px ${t.fontUi}`,
+              }}>✓</div>
+              <div style={{ font: `400 26px/1.2 ${t.fontDisplay}`, color: t.ink, marginBottom: 8 }}>
+                Quiz complete!
+              </div>
+              <div style={{ font: `15px ${t.fontBody}`, color: t.inkSoft, marginBottom: 32 }}>
+                {total} questions answered
+              </div>
+              <button onClick={() => {}} style={{
+                width: '100%', background: accent.c, color: accent.on, border: 'none',
+                borderRadius: 14, padding: '15px 20px',
+                font: `600 15px ${t.fontUi}`, cursor: 'pointer', marginBottom: 12,
+              }}>Share results with a friend</button>
+              <button onClick={onClose} style={{
+                width: '100%', background: 'transparent', color: t.ink, border: `1px solid ${t.rule}`,
+                borderRadius: 14, padding: '14px 20px',
+                font: `500 15px ${t.fontUi}`, cursor: 'pointer',
+              }}>Close</button>
+            </div>
           ) : (
-            <LinkedText text={q.prompt} accent={accent} onRef={onRef} />
+            <>
+              <div style={{
+                font: `400 ${24 * fontScale}px/1.35 ${t.fontDisplay}`,
+                color: t.ink, letterSpacing: -0.3, marginBottom: 28,
+              }}>
+                {q.type === 'blank'
+                  ? q.prompt.split('___').map((seg, i, arr) => (
+                      <React.Fragment key={i}>
+                        {seg}
+                        {i < arr.length - 1 && (
+                          <span style={{
+                            display: 'inline-block', minWidth: 80, borderBottom: `2px solid ${accent.c}`,
+                            margin: '0 4px 2px', verticalAlign: 'bottom',
+                          }} />
+                        )}
+                      </React.Fragment>
+                    ))
+                  : q.prompt
+                }
+              </div>
+
+              {q.type === 'choice' && q.choices && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {q.choices.map((c) => {
+                    const on = getAnswer(q.num, 'c') === c.label;
+                    return (
+                      <button key={c.label} type="button"
+                        onClick={() => onAnswerSlot(q.num, 'c', c.label)} style={{
+                          textAlign: 'left', padding: '14px 16px', borderRadius: 14,
+                          border: `1.5px solid ${on ? accent.c : t.paperEdge}`,
+                          background: on ? `${accent.c}12` : t.paper,
+                          color: t.ink, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', gap: 14,
+                        }}>
+                        <span style={{
+                          width: 30, height: 30, borderRadius: 15, flexShrink: 0,
+                          background: on ? accent.c : t.bg,
+                          border: `1.5px solid ${on ? accent.c : t.rule}`,
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          font: `600 12px ${t.fontUi}`, color: on ? accent.on : t.inkSoft,
+                          transition: 'all 0.15s',
+                        }}>{c.label.toUpperCase()}</span>
+                        <span style={{ font: `400 ${16 * fontScale}px/1.4 ${t.fontBody}` }}>{c.text}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {q.type === 'blank' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {q.prompt.split('___').slice(0, -1).map((_, i) => (
+                    <input key={i} type="text"
+                      value={getAnswer(q.num, `b${i}`)}
+                      onChange={(e) => onAnswerSlot(q.num, `b${i}`, e.target.value)}
+                      placeholder={`Fill in blank ${q.prompt.split('___').length > 2 ? i + 1 : ''}`}
+                      style={{
+                        width: '100%', boxSizing: 'border-box',
+                        background: t.paper, border: `1.5px solid ${t.paperEdge}`, borderRadius: 12,
+                        padding: '14px 16px', color: t.ink,
+                        font: `${16 * fontScale}px ${t.fontBody}`, outline: 'none',
+                      }}
+                      onFocus={(e) => (e.target.style.borderColor = accent.c)}
+                      onBlur={(e) => (e.target.style.borderColor = t.paperEdge)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {q.type === 'open' && (
+                <textarea
+                  value={getAnswer(q.num, 't')}
+                  onChange={(e) => onAnswerSlot(q.num, 't', e.target.value)}
+                  placeholder="Your answer…"
+                  rows={4}
+                  style={{
+                    width: '100%', resize: 'vertical', boxSizing: 'border-box',
+                    background: t.paper, border: `1.5px solid ${t.paperEdge}`, borderRadius: 12,
+                    padding: '14px 16px', color: t.ink,
+                    font: `${16 * fontScale}px/1.5 ${t.fontBody}`, outline: 'none', minHeight: 120,
+                  }}
+                  onFocus={(e) => (e.target.style.borderColor = accent.c)}
+                  onBlur={(e) => (e.target.style.borderColor = t.paperEdge)}
+                />
+              )}
+            </>
           )}
         </div>
+
+        {/* nav buttons */}
+        {!done && (
+          <div style={{ padding: '20px 20px 0', display: 'flex', gap: 10 }}>
+            {current > 0 && (
+              <button onClick={handlePrev} style={{
+                flex: 1, background: t.paper, color: t.ink,
+                border: `1px solid ${t.paperEdge}`, borderRadius: 14, padding: '14px',
+                font: `500 15px ${t.fontUi}`, cursor: 'pointer',
+              }}>Back</button>
+            )}
+            <button onClick={handleNext} style={{
+              flex: 2, background: accent.c, color: accent.on, border: 'none',
+              borderRadius: 14, padding: '15px',
+              font: `600 15px ${t.fontUi}`, cursor: 'pointer',
+            }}>
+              {current < total - 1 ? 'Next' : 'Finish'}
+            </button>
+          </div>
+        )}
       </div>
-
-      {q.type === 'choice' && q.choices && (
-        <div role="radiogroup" style={{ display: 'flex', flexDirection: 'column', gap: 8, marginLeft: 34 }}>
-          {q.choices.map((c) => {
-            const on = getAnswer('c') === c.label;
-            return (
-              <button key={c.label} type="button" role="radio" aria-checked={on}
-                onClick={() => onAnswerSlot('c', c.label)} style={{
-                  textAlign: 'left', padding: '11px 14px', borderRadius: 10,
-                  border: `1px solid ${on ? accent.c : t.rule}`,
-                  background: on ? `${accent.c}12` : 'transparent',
-                  color: t.ink, font: `${14 * fontScale}px ${t.fontBody}`, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 10,
-                }}>
-                <span style={{
-                  width: 18, height: 18, borderRadius: 9, flexShrink: 0,
-                  border: `1.5px solid ${on ? accent.c : t.inkMute}`,
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  {on && <span style={{ width: 9, height: 9, borderRadius: 5, background: accent.c }} />}
-                </span>
-                <span>{c.text}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {q.type === 'open' && (
-        <textarea
-          value={getAnswer('t')}
-          onChange={(e) => onAnswerSlot('t', e.target.value)}
-          placeholder="Your answer…"
-          rows={3}
-          style={{
-            width: '100%', resize: 'vertical', boxSizing: 'border-box',
-            background: t.bg, border: `0.5px solid ${t.rule}`, borderRadius: 10,
-            padding: '10px 12px', color: t.ink, marginLeft: 0,
-            font: `${14 * fontScale}px/1.5 ${t.fontBody}`, outline: 'none', minHeight: 90,
-          }}
-          onFocus={(e) => (e.target.style.borderColor = accent.c)}
-          onBlur={(e) => (e.target.style.borderColor = t.rule)}
-        />
-      )}
     </div>
   );
-}
-
-function BlankPrompt({
-  prompt, accent, ink, bg, fontBody, fontScale, getBlank, onBlank, onRef,
-}: {
-  prompt: string; accent: { c: string; on: string };
-  ink: string; bg: string; fontBody: string; fontScale: number;
-  getBlank: (i: number) => string;
-  onBlank: (i: number, v: string) => void;
-  onRef: (ref: string) => void;
-}) {
-  const segments = prompt.split('___');
-  const nodes: React.ReactNode[] = [];
-  segments.forEach((seg, i) => {
-    if (seg) nodes.push(<LinkedText key={`s${i}`} text={seg} accent={accent} onRef={onRef} />);
-    if (i < segments.length - 1) {
-      const val = getBlank(i);
-      const w = Math.max(70, Math.min(180, (val.length || 6) * 9));
-      nodes.push(
-        <input key={`b${i}`} type="text" value={val}
-          onChange={(e) => onBlank(i, e.target.value)}
-          style={{
-            display: 'inline-block', width: w, minWidth: 70, margin: '0 4px',
-            verticalAlign: 'baseline', background: bg, border: 'none',
-            borderBottom: `1.5px solid ${val ? accent.c : ink}80`,
-            outline: 'none', color: ink,
-            font: `500 ${15 * fontScale}px ${fontBody}`, padding: '2px 4px',
-          }}
-          onFocus={(e) => (e.target.style.borderBottomColor = accent.c)}
-          onBlur={(e) => (e.target.style.borderBottomColor = val ? accent.c : ink + '80')}
-        />,
-      );
-    }
-  });
-  return <>{nodes}</>;
 }

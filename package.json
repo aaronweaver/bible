@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview --port 3001",
     "lessons:build": "node scripts/convert-pdfs.mjs",
-    "kjv:fetch": "node scripts/fetch-kjv.mjs"
+    "kjv:fetch": "node scripts/fetch-kjv.mjs",
+    "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -19,6 +20,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
+    "gh-pages": "^6.3.0",
     "gray-matter": "^4.0.3",
     "pdf-parse": "^1.1.1",
     "typescript": "^5.6.3",

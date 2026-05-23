@@ -1,5 +1,11 @@
-import React from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
 import { light, dark } from './theme';
 import { useTheme } from './hooks/useAppState';
 import { BottomNav } from './components/BottomNav';
@@ -28,6 +34,7 @@ export function App() {
       fontFamily: t.fontBody,
       paddingBottom: 160,
     }}>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Today t={t} accent={accent} />} />
         <Route path="/today" element={<Navigate to="/" replace />} />

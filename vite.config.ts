@@ -16,7 +16,7 @@ export default defineConfig({
         background_color: '#f4f4f0',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
+        start_url: '/bible/',
         icons: [
           { src: 'icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           { src: 'icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
@@ -28,6 +28,7 @@ export default defineConfig({
       },
     }),
   ],
+  base: '/bible/',
   server: { host: true, port: 3000 },
   preview: { host: true, port: 3001 },
 });

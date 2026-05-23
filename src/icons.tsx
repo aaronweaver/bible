@@ -18,6 +18,21 @@ export function Icon({ name, size = 22, color = 'currentColor', filled = false, 
     strokeLinejoin: 'round' as const,
   };
   switch (name) {
+    case 'mail':
+      return (
+        <svg style={s} viewBox="0 0 24 24">
+          <rect x="2" y="4" width="20" height="16" rx="2" {...p} fill={filled ? color : 'none'} />
+          <path d="M2 7l10 7 10-7" {...p} fill="none" />
+        </svg>
+      );
+    case 'home':
+      return (
+        <svg style={s} viewBox="0 0 24 24">
+          {filled
+            ? <path d="M3 12L12 3l9 9v9a1 1 0 01-1 1h-5v-5h-6v5H4a1 1 0 01-1-1v-9z" {...p} fill={color} stroke="none" />
+            : <><path d="M3 12L12 3l9 9v9a1 1 0 01-1 1h-5v-5h-6v5H4a1 1 0 01-1-1v-9z" {...p} fill="none" /></>}
+        </svg>
+      );
     case 'sun':
       return (
         <svg style={s} viewBox="0 0 24 24">

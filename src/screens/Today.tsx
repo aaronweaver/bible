@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Theme } from '../theme';
 import { TopBar, DarkToggle, SectionHeader } from '../components/TopBar';
@@ -13,6 +13,7 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
   const { dark, toggleDark } = useTheme();
   const fontScale = state.prefs.fontScale / 100;
 
+  const [showPartnerModal, setShowPartnerModal] = useState(false);
   const curLesson = LESSONS.find((l) => !state.progress[l.id]?.completed) || LESSONS[0];
   const completedCount = LESSONS.filter((l) => state.progress[l.id]?.completed).length;
   const pct = Math.round((completedCount / LESSONS.length) * 100);
@@ -96,6 +97,65 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
           {curSectionsDone} of {curLesson.sections.length} sections · ~{curLesson.minutes} min
         </div>
       </button>
+
+      {/* Share buttons */}
+      <div style={{ margin: '12px 18px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <button
+          onClick={() => {
+            const msg = encodeURIComponent('Study the Bible with me! https://aaronweaver.github.io/bible/');
+            window.open(`sms:?body=${msg}`);
+          }}
+          style={{
+            background: accent.c, color: accent.on, border: 'none',
+            borderRadius: t.radiusSm, padding: '12px 10px',
+            font: `600 13px ${t.fontUi}`, cursor: 'pointer', letterSpacing: 0.1,
+          }}>
+          Share with a Friend
+        </button>
+        <button
+          onClick={() => setShowPartnerModal(true)}
+          style={{
+            background: t.paper, color: t.ink, border: `0.5px solid ${t.paperEdge}`,
+            borderRadius: t.radiusSm, padding: '12px 10px',
+            font: `600 13px ${t.fontUi}`, cursor: 'pointer', letterSpacing: 0.1,
+          }}>
+          Request a Study Partner
+        </button>
+      </div>
+
+      {/* Study partner modal */}
+      {showPartnerModal && (
+        <div onClick={() => setShowPartnerModal(false)} style={{
+          position: 'fixed', inset: 0, background: t.overlay, zIndex: 50,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+        }}>
+          <div onClick={(e) => e.stopPropagation()} style={{
+            background: t.paper, borderRadius: t.radius, padding: '32px 28px',
+            maxWidth: 340, width: '100%', textAlign: 'center',
+            boxShadow: '0 24px 60px -20px rgba(0,0,0,0.35)',
+          }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: 16, margin: '0 auto 16px',
+              background: `${accent.c}15`, color: accent.c,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Icon name="mail" size={28} />
+            </div>
+            <div style={{ font: `600 20px/1.2 ${t.fontDisplay}`, color: t.ink, marginBottom: 10 }}>
+              Request Sent
+            </div>
+            <div style={{ font: `15px/1.6 ${t.fontBody}`, color: t.inkSoft, marginBottom: 24 }}>
+              For more questions, contact{' '}
+              <span style={{ color: t.ink, fontWeight: 600 }}>Lehigh Valley Baptist Church</span>.
+            </div>
+            <button onClick={() => setShowPartnerModal(false)} style={{
+              background: accent.c, color: accent.on, border: 'none',
+              borderRadius: 999, padding: '12px 32px',
+              font: `600 15px ${t.fontUi}`, cursor: 'pointer',
+            }}>Done</button>
+          </div>
+        </div>
+      )}
 
       {/* Course progress */}
       <SectionHeader t={t} title="Course progress" />

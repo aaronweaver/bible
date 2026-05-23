@@ -6,7 +6,7 @@ import { Icon } from '../icons';
 type Tab = { id: string; label: string; icon: string; path: string };
 
 const TABS: Tab[] = [
-  { id: 'today', label: 'Today', icon: 'sun', path: '/' },
+  { id: 'today', label: 'Today', icon: 'home', path: '/' },
   { id: 'bible', label: 'Bible', icon: 'book', path: '/bible' },
   { id: 'lessons', label: 'Lessons', icon: 'lessons', path: '/lessons' },
   { id: 'profile', label: 'Profile', icon: 'profile', path: '/profile' },

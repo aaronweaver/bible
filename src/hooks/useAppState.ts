@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { DevotionalPeriod } from '../data/devotional';
+import type { ReadingPlanProgress } from '../data/readingPlans';
 
 export type DevotionalStatus = 'not-added' | 'in-progress' | 'completed';
 
@@ -22,6 +23,7 @@ export type AppState = {
   lastRead: { book: string; chapter: number; verse?: number } | null;
   prefs: { dark: boolean; fontScale: number };
   devotional: DevotionalProgress;
+  readingPlans: Record<string, ReadingPlanProgress>;
 };
 
 const STORAGE_KEY = 'cornerstone.v1';
@@ -32,6 +34,7 @@ const DEFAULT_STATE: AppState = {
   lastRead: { book: 'John', chapter: 3, verse: 16 },
   prefs: { dark: false, fontScale: 100 },
   devotional: { status: 'not-added', read: {} },
+  readingPlans: {},
 };
 
 function load(): AppState {
@@ -43,6 +46,7 @@ function load(): AppState {
       ...DEFAULT_STATE, ...parsed,
       prefs: { ...DEFAULT_STATE.prefs, ...(parsed.prefs ?? {}) },
       devotional: { ...DEFAULT_STATE.devotional, ...(parsed.devotional ?? {}) },
+      readingPlans: parsed.readingPlans ?? {},
     };
   } catch {
     return DEFAULT_STATE;
@@ -122,7 +126,43 @@ export function useAppState() {
     persist({ ...memory, devotional: { status, read: nextRead } });
   }, []);
 
-  return { state, update, updateLesson, setReflection, setAnswer, toggleHighlight, setPrefs, addDevotional, markDevotionalRead };
+  const addPlan = useCallback((planId: string) => {
+    if (memory.readingPlans[planId]?.status !== 'not-added' && memory.readingPlans[planId]) return;
+    persist({
+      ...memory,
+      readingPlans: {
+        ...memory.readingPlans,
+        [planId]: { status: 'in-progress', currentDay: 1, completedDays: [] },
+      },
+    });
+  }, []);
+
+  const markPlanDayComplete = useCallback((planId: string, day: number, totalDays: number) => {
+    const cur = memory.readingPlans[planId] ?? { status: 'in-progress', currentDay: 1, completedDays: [] };
+    const completedDays = cur.completedDays.includes(day) ? cur.completedDays : [...cur.completedDays, day];
+    const nextDay = Math.min(day + 1, totalDays);
+    const status: ReadingPlanProgress['status'] = day >= totalDays ? 'completed' : 'in-progress';
+    persist({
+      ...memory,
+      readingPlans: {
+        ...memory.readingPlans,
+        [planId]: { status, currentDay: nextDay, completedDays },
+      },
+    });
+  }, []);
+
+  const setPlanDay = useCallback((planId: string, day: number) => {
+    const cur = memory.readingPlans[planId] ?? { status: 'in-progress', currentDay: 1, completedDays: [] };
+    persist({
+      ...memory,
+      readingPlans: {
+        ...memory.readingPlans,
+        [planId]: { ...cur, currentDay: day },
+      },
+    });
+  }, []);
+
+  return { state, update, updateLesson, setReflection, setAnswer, toggleHighlight, setPrefs, addDevotional, markDevotionalRead, addPlan, markPlanDayComplete, setPlanDay };
 }
 
 export function useTheme() {

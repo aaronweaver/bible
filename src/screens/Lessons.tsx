@@ -8,12 +8,13 @@ import { useAppState, useTheme } from '../hooks/useAppState';
 import {
   DEVOTIONAL_SERIES, todayDateKey, formatDevotionalDate, devotionalDaysRead,
 } from '../data/devotional';
+import { READING_PLANS_META, planProgressPct } from '../data/readingPlans';
 
 type Tab = 'mine' | 'find' | 'completed';
 
 export function Lessons({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
   const navigate = useNavigate();
-  const { state, addDevotional } = useAppState();
+  const { state, addDevotional, addPlan } = useAppState();
   const { dark, toggleDark } = useTheme();
   const [tab, setTab] = React.useState<Tab>('mine');
   const [expanded, setExpanded] = React.useState(() => {
@@ -72,7 +73,8 @@ export function Lessons({ t, accent }: { t: Theme; accent: { c: string; on: stri
       )}
       {tab === 'find' && (
         <FindTab t={t} accent={accent} state={state}
-          onAdd={() => { addDevotional(); setTab('mine'); }}
+          onAddDevotional={() => { addDevotional(); setTab('mine'); }}
+          onAddPlan={(id) => { addPlan(id); setTab('mine'); }}
           navigate={navigate}
         />
       )}
@@ -203,25 +205,70 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
           <Icon name="chev-r" size={16} color={t.inkMute} />
         </button>
       )}
+
+      {/* Reading plan rows */}
+      {READING_PLANS_META.filter(m => state.readingPlans[m.id]?.status && state.readingPlans[m.id].status !== 'not-added').map(m => {
+        const prog = state.readingPlans[m.id];
+        const planColor = t.palette[m.accentIndex];
+        const pct = planProgressPct(prog, m.totalDays);
+        return (
+          <button
+            key={m.id}
+            onClick={() => navigate(`/plan/${m.id}/day/${prog.currentDay}`)}
+            style={{
+              width: '100%', textAlign: 'left',
+              display: 'flex', alignItems: 'center', gap: 14,
+              padding: '16px 18px',
+              background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
+              cursor: 'pointer', position: 'relative', overflow: 'hidden',
+            }}
+          >
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: planColor }} />
+            <div style={{
+              width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+              background: `${planColor}18`, color: planColor,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Icon name={m.icon as any} size={20} filled />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ font: `600 15px ${t.fontBody}`, color: t.ink, letterSpacing: -0.2 }}>
+                {m.title}
+              </div>
+              <div style={{ font: `13px ${t.fontBody}`, color: t.inkSoft, marginTop: 2, lineHeight: 1.4 }}>
+                {m.subtitle}
+              </div>
+              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ flex: 1, height: 4, borderRadius: 2, background: t.rule, overflow: 'hidden' }}>
+                  <div style={{ width: `${pct}%`, height: '100%', background: planColor, borderRadius: 2 }} />
+                </div>
+                <div style={{ font: `11px ${t.fontUi}`, color: t.inkMute, whiteSpace: 'nowrap', letterSpacing: 0.3 }}>
+                  Day {prog.currentDay}/{m.totalDays}
+                </div>
+              </div>
+            </div>
+            <Icon name="chev-r" size={16} color={t.inkMute} />
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-function FindTab({ t, accent, state, onAdd, navigate }: {
+function FindTab({ t, accent, state, onAddDevotional, onAddPlan, navigate }: {
   t: Theme; accent: { c: string; on: string }; state: any;
-  onAdd: () => void; navigate: (path: string) => void;
+  onAddDevotional: () => void; onAddPlan: (id: string) => void; navigate: (path: string) => void;
 }) {
   const devColor = t.palette[DEVOTIONAL_SERIES.accentIndex];
   const isAdded = state.devotional.status !== 'not-added';
 
   return (
-    <div style={{ padding: '0 18px' }}>
+    <div style={{ padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Morning & Evening discovery card */}
       <div style={{
         background: t.paper, border: `0.5px solid ${t.paperEdge}`,
         borderRadius: t.radius, overflow: 'hidden',
       }}>
-        {/* Colored header band */}
         <div style={{ height: 4, background: devColor }} />
         <div style={{ padding: '18px 18px 20px' }}>
           <div style={{
@@ -247,7 +294,7 @@ function FindTab({ t, accent, state, onAdd, navigate }: {
           <button
             onClick={isAdded
               ? () => navigate(`/devotional/${todayDateKey()}/morning`)
-              : onAdd}
+              : onAddDevotional}
             style={{
               marginTop: 16, width: '100%',
               background: isAdded ? 'transparent' : devColor,
@@ -264,17 +311,67 @@ function FindTab({ t, accent, state, onAdd, navigate }: {
         </div>
       </div>
 
+      {/* Reading Plans section */}
       <div style={{
-        marginTop: 24, padding: '60px 14px 0',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+        display: 'flex', alignItems: 'center', gap: 10, marginTop: 4,
       }}>
-        <div style={{ font: `600 15px ${t.fontDisplay}`, color: t.inkMute, letterSpacing: -0.2 }}>
-          More courses coming soon
+        <div style={{ font: `700 11px ${t.fontUi}`, letterSpacing: 1.4, textTransform: 'uppercase', color: t.inkMute }}>
+          Reading Plans
         </div>
-        <div style={{ font: `13px ${t.fontBody}`, color: t.inkMute, textAlign: 'center', lineHeight: 1.5 }}>
-          Additional study courses will appear here as they become available.
-        </div>
+        <div style={{ flex: 1, height: 0.5, background: t.rule }} />
       </div>
+
+      {READING_PLANS_META.map(m => {
+        const planColor = t.palette[m.accentIndex];
+        const planProg = state.readingPlans[m.id];
+        const planAdded = planProg?.status && planProg.status !== 'not-added';
+        return (
+          <div key={m.id} style={{
+            background: t.paper, border: `0.5px solid ${t.paperEdge}`,
+            borderRadius: t.radius, overflow: 'hidden',
+          }}>
+            <div style={{ height: 3, background: planColor }} />
+            <div style={{ padding: '16px 18px 18px', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+              <div style={{
+                width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+                background: `${planColor}16`, color: planColor,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Icon name={m.icon as any} size={20} filled />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ font: `600 16px/1.15 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.2 }}>
+                  {m.title}
+                </div>
+                <div style={{ font: `13px/1.45 ${t.fontBody}`, color: t.inkSoft, marginTop: 4 }}>
+                  {m.description}
+                </div>
+                <div style={{
+                  marginTop: 10, paddingTop: 10, borderTop: `0.5px solid ${t.rule}`,
+                  font: `11px ${t.fontUi}`, color: t.inkMute, letterSpacing: 0.2,
+                }}>
+                  {m.totalDays} days · {m.subtitle}
+                </div>
+                <button
+                  onClick={planAdded
+                    ? () => navigate(`/plan/${m.id}/day/${planProg.currentDay}`)
+                    : () => onAddPlan(m.id)}
+                  style={{
+                    marginTop: 12, width: '100%',
+                    background: planAdded ? 'transparent' : planColor,
+                    color: planAdded ? planColor : '#fff',
+                    border: planAdded ? `1.5px solid ${planColor}` : 'none',
+                    borderRadius: 10, padding: '11px',
+                    font: `600 14px ${t.fontUi}`, cursor: 'pointer', letterSpacing: -0.1,
+                  }}
+                >
+                  {planAdded ? `Open → Day ${planProg.currentDay}` : 'Add Plan'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -287,8 +384,9 @@ function CompletedTab({ t, accent, state, navigate }: {
   const devotionalDone = state.devotional.status === 'completed';
   const totalMinutes = LESSONS.reduce((s, l) => s + l.minutes, 0);
   const devColor = t.palette[DEVOTIONAL_SERIES.accentIndex];
+  const completedPlans = READING_PLANS_META.filter(m => state.readingPlans[m.id]?.status === 'completed');
 
-  if (!allLessonsDone && !devotionalDone) {
+  if (!allLessonsDone && !devotionalDone && completedPlans.length === 0) {
     return (
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -379,6 +477,46 @@ function CompletedTab({ t, accent, state, navigate }: {
           </div>
         </button>
       )}
+
+      {completedPlans.map(m => {
+        const planColor = t.palette[m.accentIndex];
+        return (
+          <button
+            key={m.id}
+            onClick={() => navigate(`/plan/${m.id}/day/${m.totalDays}`)}
+            style={{
+              width: '100%', textAlign: 'left',
+              display: 'flex', alignItems: 'center', gap: 14,
+              padding: '16px 18px',
+              background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
+              cursor: 'pointer', position: 'relative', overflow: 'hidden',
+            }}
+          >
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: planColor }} />
+            <div style={{
+              width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+              background: `${planColor}18`, color: planColor,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Icon name={m.icon as any} size={20} filled />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ font: `600 15px ${t.fontBody}`, color: t.ink, letterSpacing: -0.2 }}>
+                {m.title}
+              </div>
+              <div style={{ font: `13px ${t.fontBody}`, color: t.inkSoft, marginTop: 2 }}>
+                {m.totalDays} days completed
+              </div>
+              <div style={{ marginTop: 6, font: `11px ${t.fontUi}`, color: planColor, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase' }}>
+                Complete
+              </div>
+            </div>
+            <div style={{ color: planColor, flexShrink: 0 }}>
+              <Icon name="check" size={20} stroke={2.2} />
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }

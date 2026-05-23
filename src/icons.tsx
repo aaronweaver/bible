@@ -135,6 +135,16 @@ export function Icon({ name, size = 22, color = 'currentColor', filled = false, 
           <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3zM18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14z" {...p} fill={filled ? color : 'none'} />
         </svg>
       );
+    case 'share':
+      return (
+        <svg style={s} viewBox="0 0 24 24">
+          <circle cx="18" cy="5" r="3" fill={color} />
+          <circle cx="6" cy="12" r="3" fill={color} />
+          <circle cx="18" cy="19" r="3" fill={color} />
+          <line x1="8.6" y1="10.5" x2="15.4" y2="6.5" stroke={color} strokeWidth={stroke} strokeLinecap="round" />
+          <line x1="8.6" y1="13.5" x2="15.4" y2="17.5" stroke={color} strokeWidth={stroke} strokeLinecap="round" />
+        </svg>
+      );
     default:
       return null;
   }

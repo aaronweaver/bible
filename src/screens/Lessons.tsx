@@ -5,12 +5,15 @@ import { TopBar, DarkToggle } from '../components/TopBar';
 import { Icon } from '../icons';
 import { LESSONS, type Lesson } from '../data/lessons';
 import { useAppState, useTheme } from '../hooks/useAppState';
+import {
+  DEVOTIONAL_SERIES, todayDateKey, formatDevotionalDate, devotionalDaysRead,
+} from '../data/devotional';
 
 type Tab = 'mine' | 'find' | 'completed';
 
 export function Lessons({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
   const navigate = useNavigate();
-  const { state } = useAppState();
+  const { state, addDevotional } = useAppState();
   const { dark, toggleDark } = useTheme();
   const [tab, setTab] = React.useState<Tab>('mine');
   const [expanded, setExpanded] = React.useState(() => {
@@ -67,8 +70,13 @@ export function Lessons({ t, accent }: { t: Theme; accent: { c: string; on: stri
           state={state} navigate={navigate}
         />
       )}
-      {tab === 'find' && <FindTab t={t} accent={accent} />}
-      {tab === 'completed' && <CompletedTab t={t} accent={accent} state={state} />}
+      {tab === 'find' && (
+        <FindTab t={t} accent={accent} state={state}
+          onAdd={() => { addDevotional(); setTab('mine'); }}
+          navigate={navigate}
+        />
+      )}
+      {tab === 'completed' && <CompletedTab t={t} accent={accent} state={state} navigate={navigate} />}
     </div>
   );
 }
@@ -78,15 +86,18 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
   expanded: boolean; onToggle: () => void; state: any; navigate: (path: string) => void;
 }) {
   const palette = t.palette;
+  const devColor = t.palette[DEVOTIONAL_SERIES.accentIndex];
+  const devAdded = state.devotional.status !== 'not-added';
+  const daysRead = devotionalDaysRead(state.devotional.read);
+
   return (
-    <div style={{ padding: '0 18px' }}>
+    <div style={{ padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* Course card — condensed, expandable */}
       <button onClick={onToggle} style={{
         width: '100%', textAlign: 'left',
         display: 'flex', alignItems: 'center', gap: 14,
         padding: '16px 18px',
         background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
-        marginBottom: expanded ? 0 : 0,
         borderBottomLeftRadius: expanded ? 0 : t.radius,
         borderBottomRightRadius: expanded ? 0 : t.radius,
         cursor: 'pointer',
@@ -130,7 +141,7 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
           background: t.paper, border: `0.5px solid ${t.paperEdge}`,
           borderTop: 'none',
           borderBottomLeftRadius: t.radius, borderBottomRightRadius: t.radius,
-          marginBottom: 0,
+          marginTop: -12,
         }}>
           {LESSONS.map((l, i) => {
             const isDone = !!state.progress[l.id]?.completed;
@@ -149,42 +160,135 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
           })}
         </div>
       )}
+
+      {/* Devotional series row */}
+      {devAdded && (
+        <button
+          onClick={() => navigate(`/devotional/${todayDateKey()}/morning`)}
+          style={{
+            width: '100%', textAlign: 'left',
+            display: 'flex', alignItems: 'center', gap: 14,
+            padding: '16px 18px',
+            background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
+            cursor: 'pointer', position: 'relative', overflow: 'hidden',
+          }}
+        >
+          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: devColor }} />
+          <div style={{
+            width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+            background: `${devColor}18`, color: devColor,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon name="sparkles" size={20} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ font: `600 15px ${t.fontBody}`, color: t.ink, letterSpacing: -0.2 }}>
+              Morning and Evening
+            </div>
+            <div style={{ font: `13px ${t.fontBody}`, color: t.inkSoft, marginTop: 2, lineHeight: 1.4 }}>
+              C.H. Spurgeon · Daily devotional
+            </div>
+            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ flex: 1, height: 4, borderRadius: 2, background: t.rule, overflow: 'hidden' }}>
+                <div style={{
+                  width: `${(daysRead / DEVOTIONAL_SERIES.totalDays) * 100}%`, height: '100%',
+                  background: devColor, borderRadius: 2,
+                }} />
+              </div>
+              <div style={{ font: `11px ${t.fontUi}`, color: t.inkMute, whiteSpace: 'nowrap', letterSpacing: 0.3 }}>
+                {daysRead}/{DEVOTIONAL_SERIES.totalDays} days
+              </div>
+            </div>
+          </div>
+          <Icon name="chev-r" size={16} color={t.inkMute} />
+        </button>
+      )}
     </div>
   );
 }
 
-function FindTab({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: '60px 32px', gap: 12,
-    }}>
-      <div style={{
-        width: 56, height: 56, borderRadius: 16,
-        background: `${accent.c}14`, color: accent.c,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        marginBottom: 4,
-      }}>
-        <Icon name="lessons" size={26} />
-      </div>
-      <div style={{ font: `600 17px ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.2 }}>
-        More courses coming soon
-      </div>
-      <div style={{ font: `14px ${t.fontBody}`, color: t.inkMute, textAlign: 'center', lineHeight: 1.5 }}>
-        Additional study courses will appear here as they become available.
-      </div>
-    </div>
-  );
-}
-
-function CompletedTab({ t, accent, state }: {
+function FindTab({ t, accent, state, onAdd, navigate }: {
   t: Theme; accent: { c: string; on: string }; state: any;
+  onAdd: () => void; navigate: (path: string) => void;
+}) {
+  const devColor = t.palette[DEVOTIONAL_SERIES.accentIndex];
+  const isAdded = state.devotional.status !== 'not-added';
+
+  return (
+    <div style={{ padding: '0 18px' }}>
+      {/* Morning & Evening discovery card */}
+      <div style={{
+        background: t.paper, border: `0.5px solid ${t.paperEdge}`,
+        borderRadius: t.radius, overflow: 'hidden',
+      }}>
+        {/* Colored header band */}
+        <div style={{ height: 4, background: devColor }} />
+        <div style={{ padding: '18px 18px 20px' }}>
+          <div style={{
+            font: `700 11px ${t.fontUi}`, letterSpacing: 1.4, textTransform: 'uppercase',
+            color: devColor, marginBottom: 8,
+          }}>
+            C.H. Spurgeon · 1865
+          </div>
+          <div style={{ font: `500 24px/1.1 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.3 }}>
+            Morning and Evening
+          </div>
+          <div style={{ font: `14px/1.55 ${t.fontBody}`, color: t.inkSoft, marginTop: 8 }}>
+            {DEVOTIONAL_SERIES.description}
+          </div>
+          <div style={{
+            marginTop: 14, paddingTop: 14, borderTop: `0.5px solid ${t.rule}`,
+            display: 'flex', alignItems: 'center', gap: 16,
+            font: `12px ${t.fontUi}`, color: t.inkMute,
+          }}>
+            <span>366 days · 732 entries</span>
+            <span>Public domain</span>
+          </div>
+          <button
+            onClick={isAdded
+              ? () => navigate(`/devotional/${todayDateKey()}/morning`)
+              : onAdd}
+            style={{
+              marginTop: 16, width: '100%',
+              background: isAdded ? 'transparent' : devColor,
+              color: isAdded ? devColor : '#fff',
+              border: isAdded ? `1.5px solid ${devColor}` : 'none',
+              borderRadius: 12, padding: '13px',
+              font: `600 15px ${t.fontUi}`, cursor: 'pointer', letterSpacing: -0.1,
+            }}
+          >
+            {isAdded
+              ? `Open Today's Devotional — ${formatDevotionalDate(todayDateKey())}`
+              : 'Add to My Lessons'}
+          </button>
+        </div>
+      </div>
+
+      <div style={{
+        marginTop: 24, padding: '60px 14px 0',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+      }}>
+        <div style={{ font: `600 15px ${t.fontDisplay}`, color: t.inkMute, letterSpacing: -0.2 }}>
+          More courses coming soon
+        </div>
+        <div style={{ font: `13px ${t.fontBody}`, color: t.inkMute, textAlign: 'center', lineHeight: 1.5 }}>
+          Additional study courses will appear here as they become available.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompletedTab({ t, accent, state, navigate }: {
+  t: Theme; accent: { c: string; on: string }; state: any; navigate: (path: string) => void;
 }) {
   const completedCount = LESSONS.filter(l => state.progress[l.id]?.completed).length;
-  const allDone = completedCount === LESSONS.length;
+  const allLessonsDone = completedCount === LESSONS.length;
+  const devotionalDone = state.devotional.status === 'completed';
   const totalMinutes = LESSONS.reduce((s, l) => s + l.minutes, 0);
+  const devColor = t.palette[DEVOTIONAL_SERIES.accentIndex];
 
-  if (!allDone) {
+  if (!allLessonsDone && !devotionalDone) {
     return (
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -209,34 +313,72 @@ function CompletedTab({ t, accent, state }: {
   }
 
   return (
-    <div style={{ padding: '0 18px' }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 14,
-        padding: '16px 18px',
-        background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
-      }}>
+    <div style={{ padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {allLessonsDone && (
         <div style={{
-          width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-          background: `${accent.c}18`, color: accent.c,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          display: 'flex', alignItems: 'center', gap: 14,
+          padding: '16px 18px',
+          background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
         }}>
-          <Icon name="lessons" size={22} filled />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ font: `600 15px ${t.fontBody}`, color: t.ink, letterSpacing: -0.2 }}>
-            New Believers Foundation
+          <div style={{
+            width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+            background: `${accent.c}18`, color: accent.c,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon name="lessons" size={22} filled />
           </div>
-          <div style={{ font: `13px ${t.fontBody}`, color: t.inkSoft, marginTop: 2 }}>
-            A 10-step path through the basics
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ font: `600 15px ${t.fontBody}`, color: t.ink, letterSpacing: -0.2 }}>
+              New Believers Foundation
+            </div>
+            <div style={{ font: `13px ${t.fontBody}`, color: t.inkSoft, marginTop: 2 }}>
+              A 10-step path through the basics
+            </div>
+            <div style={{ marginTop: 6, font: `11px ${t.fontUi}`, color: accent.c, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase' }}>
+              Complete · ~{totalMinutes} min
+            </div>
           </div>
-          <div style={{ marginTop: 6, font: `11px ${t.fontUi}`, color: accent.c, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase' }}>
-            Complete · ~{totalMinutes} min
+          <div style={{ color: accent.c, flexShrink: 0 }}>
+            <Icon name="check" size={20} stroke={2.2} />
           </div>
         </div>
-        <div style={{ color: accent.c, flexShrink: 0 }}>
-          <Icon name="check" size={20} stroke={2.2} />
-        </div>
-      </div>
+      )}
+
+      {devotionalDone && (
+        <button
+          onClick={() => navigate(`/devotional/${todayDateKey()}/morning`)}
+          style={{
+            width: '100%', textAlign: 'left',
+            display: 'flex', alignItems: 'center', gap: 14,
+            padding: '16px 18px',
+            background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
+            cursor: 'pointer', position: 'relative', overflow: 'hidden',
+          }}
+        >
+          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: devColor }} />
+          <div style={{
+            width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+            background: `${devColor}18`, color: devColor,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon name="sparkles" size={20} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ font: `600 15px ${t.fontBody}`, color: t.ink, letterSpacing: -0.2 }}>
+              Morning and Evening
+            </div>
+            <div style={{ font: `13px ${t.fontBody}`, color: t.inkSoft, marginTop: 2 }}>
+              C.H. Spurgeon · All 366 days read
+            </div>
+            <div style={{ marginTop: 6, font: `11px ${t.fontUi}`, color: devColor, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase' }}>
+              Complete
+            </div>
+          </div>
+          <div style={{ color: devColor, flexShrink: 0 }}>
+            <Icon name="check" size={20} stroke={2.2} />
+          </div>
+        </button>
+      )}
     </div>
   );
 }

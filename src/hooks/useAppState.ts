@@ -1,4 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { DevotionalPeriod } from '../data/devotional';
+
+export type DevotionalStatus = 'not-added' | 'in-progress' | 'completed';
+
+export type DevotionalProgress = {
+  status: DevotionalStatus;
+  read: Record<string, boolean>; // "jan-1:morning" → true
+};
 
 export type LessonProgress = {
   sectionsDone: number;
@@ -13,6 +21,7 @@ export type AppState = {
   bibleHighlights: Record<string, number[]>;
   lastRead: { book: string; chapter: number; verse?: number } | null;
   prefs: { dark: boolean; fontScale: number };
+  devotional: DevotionalProgress;
 };
 
 const STORAGE_KEY = 'cornerstone.v1';
@@ -22,6 +31,7 @@ const DEFAULT_STATE: AppState = {
   bibleHighlights: {},
   lastRead: { book: 'John', chapter: 3, verse: 16 },
   prefs: { dark: false, fontScale: 100 },
+  devotional: { status: 'not-added', read: {} },
 };
 
 function load(): AppState {
@@ -29,7 +39,11 @@ function load(): AppState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_STATE;
     const parsed = JSON.parse(raw);
-    return { ...DEFAULT_STATE, ...parsed, prefs: { ...DEFAULT_STATE.prefs, ...(parsed.prefs ?? {}) } };
+    return {
+      ...DEFAULT_STATE, ...parsed,
+      prefs: { ...DEFAULT_STATE.prefs, ...(parsed.prefs ?? {}) },
+      devotional: { ...DEFAULT_STATE.devotional, ...(parsed.devotional ?? {}) },
+    };
   } catch {
     return DEFAULT_STATE;
   }
@@ -94,7 +108,21 @@ export function useAppState() {
     persist({ ...memory, prefs: { ...memory.prefs, ...patch } });
   }, []);
 
-  return { state, update, updateLesson, setReflection, setAnswer, toggleHighlight, setPrefs };
+  const addDevotional = useCallback(() => {
+    if (memory.devotional.status === 'not-added') {
+      persist({ ...memory, devotional: { ...memory.devotional, status: 'in-progress' } });
+    }
+  }, []);
+
+  const markDevotionalRead = useCallback((date: string, period: DevotionalPeriod) => {
+    const key = `${date}:${period}`;
+    const nextRead = { ...memory.devotional.read, [key]: true };
+    const readCount = Object.keys(nextRead).length;
+    const status: DevotionalStatus = readCount >= 732 ? 'completed' : 'in-progress';
+    persist({ ...memory, devotional: { status, read: nextRead } });
+  }, []);
+
+  return { state, update, updateLesson, setReflection, setAnswer, toggleHighlight, setPrefs, addDevotional, markDevotionalRead };
 }
 
 export function useTheme() {

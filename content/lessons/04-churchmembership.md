@@ -134,7 +134,7 @@ God’s desire for your life and mine now that we know the Lord Jesus Christ as 
 
 That is how I find it is in my life and in other Christian’s lives as I watch them. If you get off by yourself you may burn for a little while, that’s true. But your light will soon go out. If you get inside a New Testament Church that is preaching and teaching and living the Bible, you have some other Christians to “rub against” and when you get out of sorts they’ll be there to help rub you back into the right sorts and right direction again. When they get out of sorts, you’ll be there to help them along the way. That is what God intended for a New Testament Church. And that, my friend, is what He intends for every saved child of God, that we be a member serving through a New Testament Church.
 
-## Church Membership
+## Quiz
 
 1. According to I Timothy 3:15, what is the pillar and ground of the truth?
 
@@ -150,25 +150,26 @@ That is how I find it is in my life and in other Christian’s lives as I watch 
 
 7. What are the two offices of a New Testament church?
 
-8. An ordinance is nothing more than a symbol.
+8. An ordinance is nothing more than a symbol. True or false?
+   - a) True
+   - b) False
 
-Circle One: TRUE or FALSE 9. List the two ordinances of a local New Testament Church:
+9. List the two ordinances of a local New Testament Church.
 
-10. According to Matthew 28:18-20, a New Testament church will endeavor to _____________ people to Jesus Christ.
-
-> Matthew 28:18-20 — And Jesus came and spake unto them, saying, All power is given unto me in heaven and in earth. Go ye therefore, and teach all nations, baptizing them in the name of the Father, and of the Son, and of the Holy Ghost: Teaching them to observe all things whatsoever I have commanded you: and, lo, I am with you alway, even unto the end of the world. Amen.
+10. According to Matthew 28:18-20, a New Testament church will endeavor to ___ people to Jesus Christ.
 
 11. What did Paul the apostle declare in Acts 20:27?
 
-> Acts 20:27 — For I have not shunned to declare unto you all the counsel of God.
-
 12. What basic truth does II Corinthians 6:14-17 teach?
 
-13. How long after salvation did folks wait to join a church: a. One year b. Ten years c. They didn’t wait
+13. How long after salvation did people wait to join a church?
+   - a) One year
+   - b) Ten years
+   - c) They didn't wait
 
 14. Give the Scriptural reference showing that we should love the church of which we are a part.
 
-15. List some ways in which a church member can support their local church:
+15. List some ways in which a church member can support their local church.
 
 ## Reflect
 

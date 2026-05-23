@@ -136,7 +136,7 @@ On the basis of the Word of God, did you understand that you were a sinner and t
 
 Not your works, not your baptism, not your church membership, but Him alone. If you can point to that, if that is true in your life, then the promises of God are yours. And the Spirit of God, as you read the Scriptures, takes those promises and makes them personal in your life. If you have been saved any length of time you are able to look from the point of salvation on, and over the long haul you are able to point to some fruit in your life and say, “Look at what’s been happening. I love to be here around the people of God, I love the Word of God, I love to live for God, and I have a desire to obey Him. I want His commandments operative in my life. I have turned from the things of this world. I don’t love this world like I once did. Oh, I must confess, I’m not a Godly as I wish, and I’m not as faithful as I wish, and I’m not a loving as I wish, but the fact is that there have been some major changes in my life.” If you don’t have them, then you have to ask the question, “Was my first experience real or not?” That, my friend, is assurance of salvation.
 
-## Questions On Assurance
+## Quiz
 
 1. Can a person have full assurance of salvation?
 
@@ -144,27 +144,24 @@ Not your works, not your baptism, not your church membership, but Him alone. If 
 
 3. What will be missing in our lives if we do not have assurance of salvation? (I John 1:4)
 
-> John 1:4 — In him was life; and the life was the light of men.
-
-4. According to I John 3:21 God gives __________________.
-
-> John 3:21 — But he that doeth truth cometh to the light, that his deeds may be made manifest, that they are wrought in God.
+4. According to I John 3:21, God gives ___.
 
 5. What gives proof that eternal life is a reality?
 
-6. List some Bible references showing God’s promise of eternal life.
+6. List some Bible references showing God's promise of eternal life.
 
-7. Who does the “keeping” of our salvation?
+7. Who does the "keeping" of our salvation?
 
-8. Romans 5:5 tells us that the ____________________comes to live within us when we are born again.
-
-> Romans 5:5 — And hope maketh not ashamed; because the love of God is shed abroad in our hearts by the Holy Ghost which is given unto us.
+8. Romans 5:5 tells us that the ___ comes to live within us when we are born again.
 
 9. Does anything change when a person receives Christ, according to II Corinthians 5:17?
 
-10. Is a person “perfect” at the moment of salvation?
+10. Is a person "perfect" at the moment of salvation?
 
-11. Which of the following are evidences of God’s power at work in a saved person’s life: a. Love for other believers b. Love for the world c. Love for the Word of God
+11. Which of the following are evidences of God's power at work in a saved person's life?
+   - a) Love for other believers
+   - b) Love for the world
+   - c) Love for the Word of God
 
 12. Have you received Jesus Christ as your personal Savior?
 

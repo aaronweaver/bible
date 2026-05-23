@@ -262,21 +262,15 @@ Don't harvest an “unripened crop!” However, if it is not time to reap, ALWAY
 
 C. Explain carefully that salvation is BELIEVING, that this means RECEIVING (Christ), and that this is done by calling upon the Lord through a simple prayer. D. The so-called “sinner's prayer” has no set format, but needs to include two important elements ACKNOWLEDGMENT of the facts [I am a guilty sinner destined for Hell], and REPENTANCE [turning from sin] & FAITH [receiving the Lord Jesus Christ as personal Saviour]. E. After you lead a soul to receive the Lord—pray with him, rejoice with him, encourage him to come to church at the next opportunity. Get others to pray for the new “babe” in Christ, and talk to the pastor about getting him into this follow-up Bible study.
 
-## Assignment # 1:
+## Quiz
 
-The opportunity my Church offers me to engage in visitation is on: ____________(Day) at _________(Time).
+1. What opportunity does your church offer for visitation? When is it, and when will you attend?
 
-## Assignment # 2:
+2. Where have you placed gospel tracts or church brochures for ready use? List the locations.
 
-I have set aside copies of our Church brochure for ready use in the following places: ___________ ____________ ____________ __________ I have obtained the following Gospel tracts to use as a means of sowing the seed: ___________________________________________________ ___________________________________________________ ___________________________________________________ ___________________________________________________
+3. List two or three people the Lord would have you pray for and witness to in the next four weeks.
 
-## Assignment # 3:
-
-List two or three people the Lord would have you pray for and make opportunity to witness to in the next four weeks. (Take time to pray before writing.) ___________________________________________________ ___________________________________________________
-
-## Assignment # 4:
-
-On a separate sheet, write out your own testimony as though you were telling someone of what Christ has done for you. A testimony should be divided into three parts: - Your life before you were saved. - How you came to be saved, and what you did. - Your life since you were saved. I accept that the Bible teaches I am to both witness and seek to win others to Christ. I now dedicate my life to involve myself in this Christian duty, first by seeking to study and memorize the Scriptures, and pray for the lost; then involve myself in the opportunities presented by the Church to train and visit.
+4. Write out your personal testimony in three parts: your life before salvation, how you came to be saved, and your life since being saved.
 
 ## Reflect
 

@@ -122,17 +122,15 @@ Number three, at the end of every month, you should have a season of time that y
 
 > Isaiah 59:1-2 — Behold, the LORD’s hand is not shortened, that it cannot save; neither his ear heavy, that it cannot hear: But your iniquities have separated between you and your God, and your sins have hid his face from you, that he will not hear.
 
-## Questions On Confession
+## Quiz
 
 1. Can a believer ever lose his salvation according to John 10:27-29?
-
-> John 10:27-29 — My sheep hear my voice, and I know them, and they follow me: And I give unto them eternal life; and they shall never perish, neither shall any man pluck them out of my hand. My Father, which gave them me, is greater than all; and no man is able to pluck them out of my Father’s hand.
 
 2. Even though salvation is forever, is it necessary to confess sins after we are saved? Why or why not?
 
 3. Is it possible to sin as a Christian?
 
-4. What type of Christian is it who knows the truth, but doesn’t obey it? (I Corinthians 3:1)
+4. What type of Christian is it who knows the truth, but doesn't obey it? (I Corinthians 3:1)
 
 5. Can a Christian be satisfied to sin?
 
@@ -140,17 +138,17 @@ Number three, at the end of every month, you should have a season of time that y
 
 7. Is God exercising love when He chastises?
 
-8. God chastens only those who belong to Him.
+8. God chastens only those who belong to Him. True or false?
+   - a) True
+   - b) False
 
-Circle One: TRUE or FALSE 9. “God doesn’t whip us just to whip us, but God whips us so that we will ___________________ ourselves to Him.”
+9. God doesn't discipline us just to discipline us, but so that we will ___ ourselves to Him.
 
-10. Proverbs 28:13 tells us that the one who covers his sin shall not ____________.
+10. Proverbs 28:13 tells us that the one who covers his sin shall not ___.
 
-> Proverbs 28:13 — He that covereth his sins shall not prosper: but whoso confesseth and forsaketh them shall have mercy.
+11. Specific sin demands specific ___.
 
-11. Specific sin demands specific _____________.
-
-12. What does the word “confess” mean?
+12. What does the word "confess" mean?
 
 13. Should you wait awhile after you have sinned to confess it?
 

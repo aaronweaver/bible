@@ -134,35 +134,31 @@ How do you make good use of verses that you have memorized? You meditate on them
 
 We need five things to grasp the Word of God properly: Number one, we hear the Word of God. Number two, we read the Word of God. Number three, we study the Word of God. Number four, we memorize the Word of God. Number five, we meditate on the Word of God. And without them you will not have proper spiritual nourishment. These are five things that are necessary for spiritual growth.
 
-## Questions On Spiritual Nourishment
+## Quiz
 
 1. List four ways from II Timothy 3:16 in which the Bible profits us.
 
-2. Is it wise for a “baby” Christian to eat meat as soon as they are saved?
+2. Is it wise for a "baby" Christian to eat meat as soon as they are saved?
 
-3. “So then ____________ cometh by ____________, and hearing by the____________ of ____________. (Romans 10:17)
+3. Fill in the blank: "So then ___ cometh by ___, and hearing by the ___ of ___." (Romans 10:17)
 
-> Romans 10:17 — So then faith cometh by hearing, and hearing by the word of God.
-
-4. List several ways by which you can be a better “hearer of the Word.”
+4. List several ways by which you can be a better "hearer of the Word."
 
 5. What was Timothy to give attendance to in I Timothy 4:13?
 
 6. What is a person called if he reads the Bible according to Revelation 1:3?
 
-> Revelation 1:3 — Blessed is he that readeth, and they that hear the words of this prophecy, and keep those things which are written therein: for the time is at hand.
+7. We need to study the Bible to show ourselves approved to whom?
+   - a) Spouse
+   - b) Neighbor
+   - c) Employer
+   - d) God
 
-7. We need to study the Bible to show ourselves approved to whom? a. spouse c. employer b. neighbor d. God
+8. List the seven "P's" to help in daily Bible study.
 
-8. List seven “P’s” to help you in daily Bible study:
+9. Write out one verse you will commit to memory this week.
 
-## P__________ P__________ P__________ P__________
-
-P__________ P__________ P__________ 9. Write out one verse you will commit to memory this week:
-
-10. From Joshua 1:8, what is the best formula for success: ____________ + Observance = SUCCESS
-
-> Joshua 1:8 — This book of the law shall not depart out of thy mouth; but thou shalt meditate therein day and night, that thou mayest observe to do according to all that is written therein: for then thou shalt make thy way prosperous, and then thou shalt have good success.
+10. From Joshua 1:8, what is the best formula for success? ___ + Observance = SUCCESS
 
 ## Reflect
 

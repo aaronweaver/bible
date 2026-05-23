@@ -194,11 +194,9 @@ It must be a conscious request to God for Jesus Christ to come into your life to
 
 Friend, when you are born again you’ll never forget it. Some may say they just don’t remember anything like that happening in their life. If I didn’t remember it, I’d surely get it settled. What I am saying to you is that salvation is real. Jesus Christ has provided it. Salvation isn’t wrapped up in a church; salvation is wrapped up in a Person. You need to know Him. What a great salvation He has provided! Don’t miss it because you are hanging onto a church or baptism or some family background. As the songwriter says, “Turn your eyes upon Jesus, Look full in His wonderful face. And the things of earth will grow strangely dim In the light of His glory and grace.” --Helen Howarth Lemmel
 
-## Questions On Salvation
+## Quiz
 
 1. According to Romans 3:23, who is a sinner?
-
-> Romans 3:23 — For all have sinned, and come short of the glory of God;
 
 2. What is the central theme of the Bible?
 
@@ -212,9 +210,9 @@ Friend, when you are born again you’ll never forget it. Some may say they just
 
 7. Why is the religious man condemned?
 
-8. What four things are true of every person? a. b. c. d.
+8. What four things are true of every person?
 
-9. What four things has Christ done for us? a. b. c. d.
+9. What four things has Christ done for us?
 
 10. What is grace?
 

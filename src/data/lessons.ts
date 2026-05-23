@@ -22,55 +22,12 @@ function parseFrontmatter(raw: string): { data: Record<string, unknown>; content
   return { data, content };
 }
 
-// Parse a raw question prompt into `{ prompt, blanks, choices?, stubMode? }`.
-// Extracts a trailing "a. … b. … c. …" sequence as choices, counts inline
-// underscore-runs as fill-in blanks, and normalises blanks to a single token.
-export function parseQuestion(raw: string): { prompt: string; blanks: number; choices?: QChoice[]; stubMode?: boolean } {
-  let prompt = raw;
-  let choices: QChoice[] | undefined;
-  let stubMode = false;
-
-  // Find a trailing run of "a. …" "b. …" "c. …" [optionally "d. …"].
-  // Captures the position so we can slice and the bodies of each option.
-  const choiceMatch = prompt.match(/\s+a\.\s.*$/i);
-  if (choiceMatch) {
-    const tail = choiceMatch[0];
-    const parts: QChoice[] = [];
-    const re = /\s+([a-d])\.\s*([^]*?)(?=\s+[a-d]\.\s|$)/gi;
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(tail)) !== null) {
-      const label = m[1].toLowerCase();
-      const text = m[2].trim();
-      parts.push(text ? { label, text } : { label });
-    }
-    // Need at least 2 labels and labels must be sequential a, b[, c, d].
-    const expected = ['a', 'b', 'c', 'd'];
-    const labelsValid = parts.length >= 2 &&
-      parts.every((p, i) => p.label === expected[i]);
-    if (labelsValid) {
-      choices = parts;
-      stubMode = parts.every((p) => !p.text);
-      prompt = prompt.slice(0, choiceMatch.index).trim();
-    }
-  }
-
-  // Normalise runs of underscores down to a single `___` token + count blanks.
-  const blanks = (prompt.match(/_{3,}/g) ?? []).length;
-  prompt = prompt.replace(/_{3,}/g, '___');
-
-  const out: { prompt: string; blanks: number; choices?: QChoice[]; stubMode?: boolean } = { prompt, blanks };
-  if (choices) out.choices = choices;
-  if (stubMode) out.stubMode = true;
-  return out;
-}
-
-export type QChoice = { label: string; text?: string };
+export type QChoice = { label: string; text: string };
 export type Question = {
   num: number;
-  prompt: string;            // may contain '___' tokens
-  blanks: number;            // count of '___+' runs in prompt
+  type: 'open' | 'blank' | 'choice';
+  prompt: string;
   choices?: QChoice[];
-  stubMode?: boolean;        // true if all choices have no text (a. b. c. d.)
 };
 
 export type SectionItem =
@@ -156,28 +113,48 @@ function parseSections(body: string): LessonSection[] {
 
     const section: LessonSection = { heading };
 
-    // Questions section: rebuild from the paragraph items.
-    // Only treat sections that *start* with "Questions" as the savable-answer
-    // block ("Questions On Baptism", "Questions"). Sections like "Six Questions
-    // For Christians" are body content, not a quiz.
-    const isQuestions = /^questions\b/i.test(heading);
-    if (isQuestions && items.length) {
+    const isQuiz = /^quiz$/i.test(heading);
+    if (isQuiz) {
+      // Parse new format: numbered items optionally followed by `   - a) …` choice lines.
       const qs: Question[] = [];
-      const seen = new Set<number>();
-      for (const item of items) {
-        if (item.kind !== 'p') continue;
-        const qm = item.text.match(/^(\d+)\.\s+(.*)$/s);
-        if (!qm) continue;
-        let prompt = qm[2].replace(/\s+/g, ' ').trim();
-        // Skip sub-answer blanks like "1. 2." or empty prompts.
-        if (prompt.length < 5) continue;
-        const num = Number(qm[1]);
-        if (seen.has(num)) continue;
-        seen.add(num);
+      let curNum = 0;
+      let curPrompt = '';
+      let curChoices: QChoice[] = [];
 
-        const parsed = parseQuestion(prompt);
-        qs.push({ num, ...parsed });
+      const flush = () => {
+        if (!curPrompt) return;
+        const prompt = curPrompt.replace(/_{3,}/g, '___').trim();
+        let type: Question['type'] = 'open';
+        if (curChoices.length >= 2) type = 'choice';
+        else if (prompt.includes('___')) type = 'blank';
+        const q: Question = { num: curNum, type, prompt };
+        if (type === 'choice') q.choices = curChoices;
+        qs.push(q);
+        curPrompt = '';
+        curChoices = [];
+      };
+
+      for (const line of rest.split('\n')) {
+        const trimmed = line.trim();
+        const qm = trimmed.match(/^(\d+)\.\s+(.+)$/);
+        if (qm) {
+          flush();
+          curNum = Number(qm[1]);
+          curPrompt = qm[2];
+          continue;
+        }
+        const cm = trimmed.match(/^-\s+([a-d])\)\s+(.+)$/);
+        if (cm && curNum > 0) {
+          curChoices.push({ label: cm[1], text: cm[2] });
+          continue;
+        }
+        // continuation line for a question (indented or plain text after numbered item)
+        if (curNum > 0 && trimmed && !trimmed.startsWith('>')) {
+          curPrompt += ' ' + trimmed;
+        }
       }
+      flush();
+
       if (qs.length) section.questions = qs;
     } else if (items.length) {
       section.items = items;

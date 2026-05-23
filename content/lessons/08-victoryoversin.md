@@ -156,37 +156,29 @@ You must be saved. That is the only way to be set free from sin.
 
 Number two, I encourage you, if you are a Christian, to begin to live like one, and determine you are going to spend time in the Bible and let the Bible begin to live inside of you.
 
-## Over Sin & Temptation
+## Quiz
 
 1. What kind of a life does the Lord want us to have? (John 10:10)
 
-> John 10:10 — The thief cometh not, but for to steal, and to kill, and to destroy: I am come that they might have life, and that they might have it more abundantly.
-
 2. Is there any unusual temptation? (I Corinthians 10:13)
 
-3. Temptation is unlimited. Circle One: TRUE or FALSE
+3. Temptation is unlimited. True or false?
+   - a) True
+   - b) False
 
-4. Death is the end result of __________.
+4. Death is the end result of ___.
 
-5. What three routes will sin take in approaching the believer? a. b. c.
+5. What three routes will sin take in approaching the believer?
 
-6. The devil is described as an adversary and as a _____________ __________ in I Peter 5:8.
+6. The devil is described as an adversary and as a ___ in I Peter 5:8.
 
-7. What three ways did the believers in Revelation 12:11 use to be overcomers? a. b. c.
+7. What three ways did the believers in Revelation 12:11 use to be overcomers?
 
-> Revelation 12:11 — And they overcame him by the blood of the Lamb, and by the word of their testimony; and they loved not their lives unto the death.
-
-8. Who can overcome the world in I John 5:4-5?
-
-> John 5:4-5 — For an angel went down at a certain season into the pool, and troubled the water: whosoever then first after the troubling of the water stepped in was made whole of whatsoever disease he had. And a certain man was there, which had an infirmity thirty and eight years.
+8. Who can overcome the world according to I John 5:4-5?
 
 9. How did Jesus overcome temptation as seen in Matthew 4:1-11?
 
-> Matthew 4:1-11 — Then was Jesus led up of the Spirit into the wilderness to be tempted of the devil. And when he had fasted forty days and forty nights, he was afterward an hungred. And when the tempter came to him, he said, If thou be the Son of God, command that these stones be made bread. But he answered and said, It is written, Man shall not live by bread alone, but by every word that proceedeth out of the mouth of God. Then the devil taketh him up into the holy city, and setteth him on a pinnacle of the temple, And saith unto him, If thou be the Son of God, cast thyself down: for it is written, He shall give his angels charge concerning thee: and in their hands they shall bear thee up, lest at any time thou dash thy foot against a stone. Jesus said unto him, It is written again, Thou shalt not tempt the Lord thy God. Again, the devil taketh him up into an exceeding high mountain, and sheweth him all the kingdoms of the world, and the glory of them; And saith unto him, All these things will I give thee, if thou wilt fall down and worship me. Then saith Jesus unto him, Get thee hence, Satan: for it is written, Thou shalt worship the Lord thy God, and him only shalt thou serve. Then the devil leaveth him, and, behold, angels came and ministered unto him.
-
 10. James 4:7 tells us what Satan will do if we resist him. How will he react?
-
-> James 4:7 — Submit yourselves therefore to God. Resist the devil, and he will flee from you.
 
 ## Reflect
 

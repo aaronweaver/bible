@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { Theme } from '../theme';
 import { TopBar, CircleBtn } from '../components/TopBar';
 import { Icon } from '../icons';
-import { LESSONS, parseVerseRef, type LessonSection, type Question, type QChoice } from '../data/lessons';
+import { LESSONS, parseVerseRef, type LessonSection, type Question } from '../data/lessons';
 import { useAppState } from '../hooks/useAppState';
 
 // Same regex used by the converter; kept simple — book names with optional
@@ -266,14 +266,30 @@ function Section({
       ))}
 
       {section.questions && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 8 }}>
-          {section.questions.map((q) => (
-            <QuestionItem key={q.num} t={t} accent={accent} fontScale={fontScale}
-              q={q}
-              getAnswer={(slot) => answers[`${idx}:${q.num}:${slot}`] || ''}
-              onAnswerSlot={(slot, v) => onAnswerSlot(idx, q.num, slot, v)}
-              onRef={openVerse} />
-          ))}
+        <div style={{ marginTop: 8 }}>
+          <div style={{
+            font: `600 11px ${t.fontUi}`, letterSpacing: 1.4,
+            textTransform: 'uppercase', color: accent.c, marginBottom: 14,
+          }}>Quiz</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {section.questions.map((q) => (
+              <QuizCard key={q.num} t={t} accent={accent} fontScale={fontScale}
+                q={q}
+                getAnswer={(slot) => answers[`${idx}:${q.num}:${slot}`] || ''}
+                onAnswerSlot={(slot, v) => onAnswerSlot(idx, q.num, slot, v)}
+                onRef={openVerse} />
+            ))}
+          </div>
+          <button
+            onClick={() => {}}
+            style={{
+              marginTop: 20, width: '100%',
+              background: accent.c, color: accent.on, border: 'none',
+              borderRadius: 14, padding: '15px 20px',
+              font: `600 15px ${t.fontUi}`, cursor: 'pointer', letterSpacing: 0.1,
+            }}>
+            Share results with a friend
+          </button>
         </div>
       )}
 
@@ -317,7 +333,7 @@ function Section({
   );
 }
 
-function QuestionItem({
+function QuizCard({
   t, accent, fontScale, q, getAnswer, onAnswerSlot, onRef,
 }: {
   t: Theme; accent: { c: string; on: string }; fontScale: number;
@@ -326,147 +342,89 @@ function QuestionItem({
   onAnswerSlot: (slot: string, v: string) => void;
   onRef: (ref: string) => void;
 }) {
-  const hasChoices = !!q.choices && q.choices.length > 0;
-  const isStubs = hasChoices && !!q.stubMode;
-  const isRadio = hasChoices && !q.stubMode;
-  // Free-text fallback only when there are no blanks AND no choices.
-  const showTextarea = q.blanks === 0 && !hasChoices;
-
-  // Track if anything was filled in (for the "Saved" microcopy).
-  const anyFilled = (() => {
-    for (let i = 0; i < q.blanks; i++) if (getAnswer(`b${i}`)) return true;
-    if (isRadio && getAnswer('c')) return true;
-    if (isStubs && q.choices) for (const c of q.choices) if (getAnswer(`s_${c.label}`)) return true;
-    if (showTextarea && getAnswer('t')) return true;
-    return false;
-  })();
-
   return (
     <div style={{
-      padding: '14px 16px', background: t.paper,
-      border: `0.5px solid ${t.paperEdge}`, borderRadius: 12,
+      padding: '16px', background: t.paper,
+      border: `0.5px solid ${t.paperEdge}`, borderRadius: 14,
     }}>
-      <div style={{
-        font: `400 ${15 * fontScale}px/1.7 ${t.fontBody}`, color: t.ink,
-        marginBottom: 12,
-      }}>
-        <span style={{ fontWeight: 600, marginRight: 6 }}>{q.num}.</span>
-        <PromptWithBlanks
-          prompt={q.prompt}
-          accent={accent}
-          rule={t.rule}
-          ink={t.ink}
-          bg={t.bg}
-          fontBody={t.fontBody}
-          fontScale={fontScale}
-          getBlank={(i) => getAnswer(`b${i}`)}
-          onBlank={(i, v) => onAnswerSlot(`b${i}`, v)}
-          onRef={onRef}
-        />
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: q.type === 'open' ? 10 : 14 }}>
+        <span style={{
+          flexShrink: 0, minWidth: 24, height: 24, borderRadius: 12,
+          background: `${accent.c}18`, color: accent.c,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          font: `600 11px ${t.fontUi}`,
+        }}>{q.num}</span>
+        <div style={{ font: `400 ${15 * fontScale}px/1.6 ${t.fontBody}`, color: t.ink }}>
+          {q.type === 'blank' ? (
+            <BlankPrompt
+              prompt={q.prompt} accent={accent} ink={t.ink} bg={t.bg}
+              fontBody={t.fontBody} fontScale={fontScale}
+              getBlank={(i) => getAnswer(`b${i}`)}
+              onBlank={(i, v) => onAnswerSlot(`b${i}`, v)}
+              onRef={onRef}
+            />
+          ) : (
+            <LinkedText text={q.prompt} accent={accent} onRef={onRef} />
+          )}
+        </div>
       </div>
 
-      {isRadio && q.choices && (
-        <div role="radiogroup" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {q.type === 'choice' && q.choices && (
+        <div role="radiogroup" style={{ display: 'flex', flexDirection: 'column', gap: 8, marginLeft: 34 }}>
           {q.choices.map((c) => {
             const on = getAnswer('c') === c.label;
             return (
               <button key={c.label} type="button" role="radio" aria-checked={on}
                 onClick={() => onAnswerSlot('c', c.label)} style={{
-                  textAlign: 'left', padding: '12px 14px', borderRadius: 10,
+                  textAlign: 'left', padding: '11px 14px', borderRadius: 10,
                   border: `1px solid ${on ? accent.c : t.rule}`,
                   background: on ? `${accent.c}12` : 'transparent',
-                  color: t.ink, font: `15px ${t.fontBody}`, cursor: 'pointer',
+                  color: t.ink, font: `${14 * fontScale}px ${t.fontBody}`, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 10,
                 }}>
                 <span style={{
-                  width: 18, height: 18, borderRadius: 9,
+                  width: 18, height: 18, borderRadius: 9, flexShrink: 0,
                   border: `1.5px solid ${on ? accent.c : t.inkMute}`,
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
                 }}>
-                  {on && <span style={{
-                    width: 9, height: 9, borderRadius: 5, background: accent.c,
-                  }} />}
+                  {on && <span style={{ width: 9, height: 9, borderRadius: 5, background: accent.c }} />}
                 </span>
-                <span><b style={{ marginRight: 6 }}>{c.label}.</b>{c.text}</span>
+                <span>{c.text}</span>
               </button>
             );
           })}
         </div>
       )}
 
-      {isStubs && q.choices && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {q.choices.map((c) => (
-            <div key={c.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{
-                fontWeight: 600, color: t.inkSoft, font: `14px ${t.fontUi}`,
-                width: 18, flexShrink: 0,
-              }}>{c.label}.</span>
-              <input type="text" value={getAnswer(`s_${c.label}`)}
-                onChange={(e) => onAnswerSlot(`s_${c.label}`, e.target.value)}
-                placeholder="…"
-                style={{
-                  flex: 1, boxSizing: 'border-box',
-                  background: t.bg, border: `0.5px solid ${t.rule}`, borderRadius: 8,
-                  padding: '10px 12px', color: t.ink,
-                  font: `14px ${t.fontBody}`, outline: 'none',
-                }}
-                onFocus={(e) => (e.target.style.borderColor = accent.c)}
-                onBlur={(e) => (e.target.style.borderColor = t.rule)}
-              />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {showTextarea && (
+      {q.type === 'open' && (
         <textarea
           value={getAnswer('t')}
           onChange={(e) => onAnswerSlot('t', e.target.value)}
           placeholder="Your answer…"
-          rows={4}
+          rows={3}
           style={{
             width: '100%', resize: 'vertical', boxSizing: 'border-box',
-            background: t.bg, border: `0.5px solid ${t.rule}`, borderRadius: 8,
-            padding: '10px 12px', color: t.ink,
-            font: `14px/1.5 ${t.fontBody}`, outline: 'none', minHeight: 120,
+            background: t.bg, border: `0.5px solid ${t.rule}`, borderRadius: 10,
+            padding: '10px 12px', color: t.ink, marginLeft: 0,
+            font: `${14 * fontScale}px/1.5 ${t.fontBody}`, outline: 'none', minHeight: 90,
           }}
           onFocus={(e) => (e.target.style.borderColor = accent.c)}
           onBlur={(e) => (e.target.style.borderColor = t.rule)}
         />
       )}
-
-      {anyFilled && (
-        <div style={{
-          marginTop: 8, font: `11px ${t.fontUi}`, color: t.inkMute,
-        }}>Saved</div>
-      )}
     </div>
   );
 }
 
-// Splits a prompt on '___' tokens and renders an inline writing-line <input>
-// between each pair of segments. Each segment passes through LinkedText so
-// scripture references stay tappable.
-function PromptWithBlanks({
-  prompt, accent, rule, ink, bg, fontBody, fontScale,
-  getBlank, onBlank, onRef,
+function BlankPrompt({
+  prompt, accent, ink, bg, fontBody, fontScale, getBlank, onBlank, onRef,
 }: {
-  prompt: string;
-  accent: { c: string; on: string };
-  rule: string;
-  ink: string;
-  bg: string;
-  fontBody: string;
-  fontScale: number;
+  prompt: string; accent: { c: string; on: string };
+  ink: string; bg: string; fontBody: string; fontScale: number;
   getBlank: (i: number) => string;
   onBlank: (i: number, v: string) => void;
   onRef: (ref: string) => void;
 }) {
-  if (!prompt.includes('___')) {
-    return <LinkedText text={prompt} accent={accent} onRef={onRef} />;
-  }
   const segments = prompt.split('___');
   const nodes: React.ReactNode[] = [];
   segments.forEach((seg, i) => {
@@ -475,23 +433,14 @@ function PromptWithBlanks({
       const val = getBlank(i);
       const w = Math.max(70, Math.min(180, (val.length || 6) * 9));
       nodes.push(
-        <input
-          key={`b${i}`}
-          type="text"
-          value={val}
+        <input key={`b${i}`} type="text" value={val}
           onChange={(e) => onBlank(i, e.target.value)}
           style={{
-            display: 'inline-block',
-            width: w, minWidth: 70,
-            margin: '0 4px',
-            verticalAlign: 'baseline',
-            background: bg,
-            border: 'none',
+            display: 'inline-block', width: w, minWidth: 70, margin: '0 4px',
+            verticalAlign: 'baseline', background: bg, border: 'none',
             borderBottom: `1.5px solid ${val ? accent.c : ink}80`,
-            outline: 'none',
-            color: ink,
-            font: `500 ${15 * fontScale}px ${fontBody}`,
-            padding: '2px 4px',
+            outline: 'none', color: ink,
+            font: `500 ${15 * fontScale}px ${fontBody}`, padding: '2px 4px',
           }}
           onFocus={(e) => (e.target.style.borderBottomColor = accent.c)}
           onBlur={(e) => (e.target.style.borderBottomColor = val ? accent.c : ink + '80')}

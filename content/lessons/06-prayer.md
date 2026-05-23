@@ -134,35 +134,32 @@ You ought to have. Do you have a time when you have a special season of prayer e
 
 Number four,do you thank God for answers to your prayers? Do you have some kind of a record to remind you of what God has done? How much more, in a human sense, would we get from a person if we are thankful than if we are unthankful for what they do for us? I think that it must be much the same with God. For if we are unthankful, why should God do anything for us when we ask? Of course the reason He does what He does is because of Christ. I understand that. But unthankfulness is a mark of an unsaved man, of a reprobate, according to Romans 1. Yet how many Christians could it be said of them, they are unthankful people. We need to be thankful.
 
-## Questions On Prayer
+## Quiz
 
-1. God wants our prayers to be Scriptural and _______________.
+1. God wants our prayers to be Scriptural and ___.
 
-2. Why does the believer need to pray in Jesus’ name? a. He is commanded b. Because of what Christ has done for us c. Both of the above
+2. Why does the believer need to pray in Jesus' name?
+   - a) He is commanded
+   - b) Because of what Christ has done for us
+   - c) Both of the above
 
 3. Did the writer of Psalm 55 pray several times a day?
 
-4. What are the four ingredients of a prayer life? a. b. c. d.
+4. What are the four ingredients of a prayer life?
 
 5. List some things for which you can praise God in your prayer life.
 
 6. According to Isaiah 59:1-2, what can hinder our prayer life?
 
-> Isaiah 59:1-2 — Behold, the LORD’s hand is not shortened, that it cannot save; neither his ear heavy, that it cannot hear: But your iniquities have separated between you and your God, and your sins have hid his face from you, that he will not hear.
-
 7. Ephesians 5:20 instructs us to give thanks always for what?
 
-> Ephesians 5:20 — Giving thanks always for all things unto God and the Father in the name of our Lord Jesus Christ;
-
-8. Whom should we pray for according to I Timothy 2:1,2?
+8. Whom should we pray for according to I Timothy 2:1-2?
 
 9. What are we to cast on the Lord (I Peter 5:7)?
 
-10. What are we to make known unto God? (Philippians 4:6)?
+10. What are we to make known unto God? (Philippians 4:6)
 
-> Philippians 4:6 — Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God.
-
-11. List several requests you have and pray this week that God will answer them.
+11. List several prayer requests you have and commit to praying for them this week.
 
 ## Reflect
 

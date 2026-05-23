@@ -188,45 +188,43 @@ If you have been born again, if you have been saved, if you are a child of God, 
 
 > Luke 6:46 — And why call ye me, Lord, Lord, and do not the things which I say?
 
-## Questions On Baptism
+## Quiz
 
-1. The mark of a child of God when we get saved is _______________________________________________.
+1. The mark of a child of God when we get saved is ___.
 
-2. According to Acts 5:29 we ought to obey ________ rather than men.
+2. According to Acts 5:29 we ought to obey ___ rather than men.
 
-> Acts 5:29 — Then Peter and the other apostles answered and said, We ought to obey God rather than men.
-
-3. Which of the following is the Biblical pattern? #1 #2 #3 a. Baptism a. Salvation a. Salvation b. Salvation b. Baptism b. Teaching c. Teaching c. Teaching c. Baptism
+3. Which of the following is the Biblical pattern for Salvation, Baptism, and Teaching?
+   - a) Baptism, Salvation, Teaching
+   - b) Salvation, Baptism, Teaching
+   - c) Salvation, Teaching, Baptism
 
 4. Is baptism necessary for salvation?
 
 5. Who may be Scripturally baptized?
 
-6. Why were believers baptized in the Jordan River? To be: a. sprinkled b. poured upon c. put under the water
+6. Why were believers baptized in the Jordan River?
+   - a) To be sprinkled
+   - b) To be poured upon
+   - c) To be put under the water
 
-7. According to Romans 6:3,4 baptism is a picture of being ___________ and ___________, ___________ and ___________.
-
-> Romans 6:3 — Know ye not, that so many of us as were baptized into Jesus Christ were baptized into his death?
+7. According to Romans 6:3-4, baptism is a picture of being ___ and ___, ___ and ___.
 
 8. During a baptism, how many times should the believer be immersed?
 
 9. Why should a person be immersed?
 
-10. Is a person truly saved if he wants to remain a “secret disciple?”
+10. Is a person truly saved if he wants to remain a "secret disciple?"
 
-11. What is the “door” into the New Testament church?
+11. What is the "door" into the New Testament church?
 
-12. Do individuals have the authority, or right, to baptize? Who does?
+12. Do individuals have the authority to baptize? Who does?
 
-13. What are the two ordinances given to the local church?
-
-1. 2.
+13. List the two ordinances given to the local church.
 
 14. Where should a believer be baptized?
 
-15. Should a person be baptized immediately after being saved according to Acts 2:41?
-
-> Acts 2:41 — Then they that gladly received his word were baptized: and the same day there were added unto them about three thousand souls.
+15. Should a person be baptized immediately after being saved, according to Acts 2:41?
 
 16. What is the most important thing you have learned in this lesson?
 

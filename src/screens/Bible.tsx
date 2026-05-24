@@ -167,8 +167,8 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
         </button>
       </div>
 
-      {/* Plan day completion — shown only on the last reading of the day */}
-      {nav?.isLastReading && nav.planId && nav.planDay != null && nav.planTotalDays != null && (() => {
+      {/* Plan day completion — shown whenever reading from a plan */}
+      {nav?.planId && nav.planDay != null && nav.planTotalDays != null && (() => {
         const planColor = t.palette[nav.planAccentIndex ?? 0];
         const alreadyDone = state.readingPlans[nav.planId]?.completedDays?.includes(nav.planDay) ?? false;
         return (

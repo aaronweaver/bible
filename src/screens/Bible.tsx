@@ -15,6 +15,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
   const navigate = useNavigate();
   const nav = location.state as {
     book?: string; chapter?: number; verse?: number;
+    startVerse?: number; endVerse?: number;
     returnTo?: string; returnLabel?: string;
     openPicker?: boolean;
     lastReadingBook?: string; lastReadingChapter?: number;
@@ -30,10 +31,16 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
   const [showPicker, setShowPicker] = useState(false);
   const [targetVerse, setTargetVerse] = useState<number | null>(null);
   const [showCompletion, setShowCompletion] = useState(false);
+  const [flashVerse, setFlashVerse] = useState<number | null>(null);
 
-  const verseCount = blocks.reduce((s, b) => s + b.verses.length, 0);
   const key = `${book} ${chapter}`;
   const highlighted = new Set(state.bibleHighlights[key] ?? []);
+  const displayBlocks = (nav?.startVerse && nav?.endVerse)
+    ? blocks
+        .map(b => ({ ...b, verses: b.verses.filter(v => v.num >= nav.startVerse! && v.num <= nav.endVerse!) }))
+        .filter(b => b.verses.length > 0)
+    : blocks;
+  const verseCount = displayBlocks.reduce((s, b) => s + b.verses.length, 0);
 
   useEffect(() => {
     let alive = true;
@@ -53,14 +60,16 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
 
   // Scroll to target verse once blocks are loaded
   useEffect(() => {
-    const v = targetVerse ?? nav?.verse;
+    const v = targetVerse ?? nav?.verse ?? nav?.startVerse;
     if (!v || verseCount === 0) return;
     const el = verseRefs.current[v];
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setFlashVerse(v);
+      setTimeout(() => setFlashVerse(null), 1000);
       setTargetVerse(null);
     }
-  }, [verseCount, targetVerse, nav?.verse]);
+  }, [verseCount, targetVerse, nav?.verse, nav?.startVerse]);
 
   const maxChapter = BIBLE_BOOKS.find((b) => b.name === book)?.chapters ?? 1;
   const prevChapter = () => { if (chapter > 1) { setChapter(chapter - 1); window.scrollTo(0, 0); } };
@@ -118,7 +127,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
         </div>
       ) : (
         <div style={{ padding: '12px 22px 20px', color: t.ink }}>
-          {blocks.map((block, bi) => (
+          {displayBlocks.map((block, bi) => (
             <React.Fragment key={bi}>
               {block.title && (
                 <h2 style={{
@@ -139,9 +148,11 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
                       ref={(el) => { verseRefs.current[num] = el; }}
                       onClick={() => toggleHighlight(key, num)} style={{
                         cursor: 'pointer',
-                        background: isHL
-                          ? (dark ? '#fbbf2455' : `${accent.c}66`)
-                          : (nav?.verse === num ? (dark ? '#fbbf2433' : `${accent.c}44`) : 'transparent'),
+                        background: flashVerse === num
+                          ? (dark ? '#fbbf2488' : `${accent.c}aa`)
+                          : isHL
+                            ? (dark ? '#fbbf2455' : `${accent.c}66`)
+                            : (nav?.verse === num ? (dark ? '#fbbf2433' : `${accent.c}44`) : 'transparent'),
                         borderRadius: 3, padding: '1px 2px', transition: 'background 0.15s',
                       }}>
                       <sup style={{

@@ -105,6 +105,7 @@ export function PlanReader({ t }: { t: Theme }) {
               state: {
                 book: r.book, chapter: r.chapter,
                 startVerse: r.startVerse,
+                endVerse: r.endVerse,
                 returnTo: `/plan/${planId}/day/${dayNum}`,
                 returnLabel: `Day ${dayNum}`,
                 lastReadingBook: todayData.readings[todayData.readings.length - 1].book,
@@ -166,6 +167,7 @@ export function PlanReader({ t }: { t: Theme }) {
                     book: todayData.readings[0].book,
                     chapter: todayData.readings[0].chapter,
                     startVerse: todayData.readings[0].startVerse,
+                    endVerse: todayData.readings[0].endVerse,
                     returnTo: `/plan/${planId}/day/${dayNum}`,
                     returnLabel: `Day ${dayNum}`,
                     lastReadingBook: todayData.readings[todayData.readings.length - 1].book,

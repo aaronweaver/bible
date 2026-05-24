@@ -14,7 +14,7 @@ type Tab = 'mine' | 'find' | 'completed';
 
 export function Lessons({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
   const navigate = useNavigate();
-  const { state, addDevotional, addPlan } = useAppState();
+  const { state, addDevotional, addPlan, removePlan } = useAppState();
   const { dark, toggleDark } = useTheme();
   const [tab, setTab] = React.useState<Tab>('mine');
   const [expanded, setExpanded] = React.useState(() => {
@@ -68,7 +68,7 @@ export function Lessons({ t, accent }: { t: Theme; accent: { c: string; on: stri
             try { localStorage.setItem('cornerstone.lessonsExpanded', String(next)); } catch {}
             return next;
           })}
-          state={state} navigate={navigate}
+          state={state} navigate={navigate} onRemovePlan={removePlan}
         />
       )}
       {tab === 'find' && (
@@ -83,14 +83,16 @@ export function Lessons({ t, accent }: { t: Theme; accent: { c: string; on: stri
   );
 }
 
-function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onToggle, state, navigate }: {
+function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onToggle, state, navigate, onRemovePlan }: {
   t: Theme; accent: { c: string; on: string }; completedCount: number; totalMinutes: number;
   expanded: boolean; onToggle: () => void; state: any; navigate: (path: string) => void;
+  onRemovePlan: (id: string) => void;
 }) {
   const palette = t.palette;
   const devColor = t.palette[DEVOTIONAL_SERIES.accentIndex];
   const devAdded = state.devotional.status !== 'not-added';
   const daysRead = devotionalDaysRead(state.devotional.read);
+  const [stopConfirm, setStopConfirm] = React.useState<string | null>(null); // planId to confirm stop
 
   return (
     <div style={{ padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -212,45 +214,104 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
         const planColor = t.palette[m.accentIndex];
         const pct = planProgressPct(prog, m.totalDays);
         return (
-          <button
-            key={m.id}
-            onClick={() => navigate(`/plan/${m.id}/day/${prog.currentDay}`)}
-            style={{
-              width: '100%', textAlign: 'left',
-              display: 'flex', alignItems: 'center', gap: 14,
-              padding: '16px 18px',
-              background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
-              cursor: 'pointer', position: 'relative', overflow: 'hidden',
-            }}
-          >
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: planColor }} />
-            <div style={{
-              width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-              background: `${planColor}18`, color: planColor,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Icon name={m.icon as any} size={20} filled />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ font: `600 15px ${t.fontBody}`, color: t.ink, letterSpacing: -0.2 }}>
-                {m.title}
+          <div key={m.id} style={{ position: 'relative' }}>
+            <button
+              onClick={() => navigate(`/plan/${m.id}/day/${prog.currentDay}`)}
+              style={{
+                width: '100%', textAlign: 'left',
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: '16px 18px',
+                background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
+                cursor: 'pointer', position: 'relative', overflow: 'hidden',
+              }}
+            >
+              <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: planColor }} />
+              <div style={{
+                width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                background: `${planColor}18`, color: planColor,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Icon name={m.icon as any} size={20} filled />
               </div>
-              <div style={{ font: `13px ${t.fontBody}`, color: t.inkSoft, marginTop: 2, lineHeight: 1.4 }}>
-                {m.subtitle}
-              </div>
-              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ flex: 1, height: 4, borderRadius: 2, background: t.rule, overflow: 'hidden' }}>
-                  <div style={{ width: `${pct}%`, height: '100%', background: planColor, borderRadius: 2 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ font: `600 15px ${t.fontBody}`, color: t.ink, letterSpacing: -0.2 }}>
+                  {m.title}
                 </div>
-                <div style={{ font: `11px ${t.fontUi}`, color: t.inkMute, whiteSpace: 'nowrap', letterSpacing: 0.3 }}>
-                  Day {prog.currentDay}/{m.totalDays}
+                <div style={{ font: `13px ${t.fontBody}`, color: t.inkSoft, marginTop: 2, lineHeight: 1.4 }}>
+                  {m.subtitle}
+                </div>
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ flex: 1, height: 4, borderRadius: 2, background: t.rule, overflow: 'hidden' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: planColor, borderRadius: 2 }} />
+                  </div>
+                  <div style={{ font: `11px ${t.fontUi}`, color: t.inkMute, whiteSpace: 'nowrap', letterSpacing: 0.3 }}>
+                    Day {prog.currentDay}/{m.totalDays}
+                  </div>
                 </div>
               </div>
-            </div>
-            <Icon name="chev-r" size={16} color={t.inkMute} />
-          </button>
+              {/* stop button */}
+              <button
+                onClick={(e) => { e.stopPropagation(); setStopConfirm(m.id); }}
+                style={{
+                  flexShrink: 0, width: 32, height: 32, borderRadius: 16,
+                  background: `${t.inkMute}14`, border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: t.inkMute, font: `700 16px ${t.fontUi}`,
+                }}
+                aria-label="Stop plan"
+              >
+                ···
+              </button>
+            </button>
+          </div>
         );
       })}
+
+      {/* Stop plan confirmation modal */}
+      {stopConfirm && (() => {
+        const planMeta = READING_PLANS_META.find(m => m.id === stopConfirm);
+        return (
+          <div onClick={() => setStopConfirm(null)} style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 60,
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          }}>
+            <div onClick={e => e.stopPropagation()} style={{
+              background: t.paper, borderRadius: '20px 20px 0 0',
+              width: '100%', maxWidth: 480, padding: '20px 24px 40px',
+              animation: 'slideUp 0.25s cubic-bezier(0.32,0.72,0,1)',
+            }}>
+              <style>{`@keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }`}</style>
+              <div style={{ width: 36, height: 4, background: t.rule, borderRadius: 2, margin: '0 auto 20px' }} />
+              <div style={{ font: `600 18px/1.2 ${t.fontDisplay}`, color: t.ink, marginBottom: 8 }}>
+                Stop "{planMeta?.title}"?
+              </div>
+              <div style={{ font: `14px/1.55 ${t.fontBody}`, color: t.inkSoft, marginBottom: 24 }}>
+                Your progress will be removed. You can always add it again from Find.
+              </div>
+              <button
+                onClick={() => { onRemovePlan(stopConfirm); setStopConfirm(null); }}
+                style={{
+                  width: '100%', background: '#e53e3e', color: '#fff', border: 'none',
+                  borderRadius: 12, padding: '14px',
+                  font: `600 15px ${t.fontUi}`, cursor: 'pointer', marginBottom: 10,
+                }}
+              >
+                Stop Plan
+              </button>
+              <button
+                onClick={() => setStopConfirm(null)}
+                style={{
+                  width: '100%', background: 'transparent', color: t.inkSoft,
+                  border: `1px solid ${t.rule}`, borderRadius: 12, padding: '13px',
+                  font: `600 15px ${t.fontUi}`, cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

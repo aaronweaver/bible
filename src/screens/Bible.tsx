@@ -5,9 +5,10 @@ import { TopBar, CircleBtn, DarkToggle } from '../components/TopBar';
 import { Icon } from '../icons';
 import { BIBLE_BOOKS, getChapterBlocks, getVerseCount, formatBookTitle, isNumberedBook, type Block } from '../data/bible';
 import { useAppState, useTheme } from '../hooks/useAppState';
+import { PlanCompletionSheet } from '../components/PlanCompletionSheet';
 
 export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
-  const { state, toggleHighlight, update } = useAppState();
+  const { state, toggleHighlight, update, markPlanDayComplete } = useAppState();
   const { dark, toggleDark } = useTheme();
   const fontScale = state.prefs.fontScale / 100;
   const location = useLocation();
@@ -16,6 +17,9 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
     book?: string; chapter?: number; verse?: number;
     returnTo?: string; returnLabel?: string;
     openPicker?: boolean;
+    isLastReading?: boolean;
+    planId?: string; planDay?: number; planTotalDays?: number;
+    planAccentIndex?: number; planTitle?: string;
   } | null;
 
   const initial = nav?.book ? { book: nav.book, chapter: nav.chapter ?? 1 } : (state.lastRead ?? { book: 'John', chapter: 3 });
@@ -25,6 +29,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [targetVerse, setTargetVerse] = useState<number | null>(null);
+  const [showCompletion, setShowCompletion] = useState(false);
 
   const verseCount = blocks.reduce((s, b) => s + b.verses.length, 0);
   const key = `${book} ${chapter}`;
@@ -161,6 +166,81 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
           Next <Icon name="chev-r" size={16} color={t.inkSoft} />
         </button>
       </div>
+
+      {/* Plan day completion — shown only on the last reading of the day */}
+      {nav?.isLastReading && nav.planId && nav.planDay != null && nav.planTotalDays != null && (() => {
+        const planColor = t.palette[nav.planAccentIndex ?? 0];
+        const alreadyDone = state.readingPlans[nav.planId]?.completedDays?.includes(nav.planDay) ?? false;
+        return (
+          <div style={{ margin: '24px 22px 0', padding: '18px 20px', background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius }}>
+            {!alreadyDone ? (
+              <>
+                <button
+                  onClick={() => {
+                    markPlanDayComplete(nav.planId!, nav.planDay!, nav.planTotalDays!);
+                    setShowCompletion(true);
+                  }}
+                  style={{
+                    width: '100%', background: planColor, color: '#fff',
+                    border: 'none', borderRadius: 12, padding: '15px',
+                    font: `600 16px ${t.fontUi}`, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                    boxShadow: `0 8px 24px -10px ${planColor}99`,
+                  }}
+                >
+                  <div style={{
+                    width: 22, height: 22, borderRadius: 11,
+                    border: '2px solid rgba(255,255,255,0.7)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Icon name="check" size={12} stroke={2.5} color="rgba(255,255,255,0.7)" />
+                  </div>
+                  Mark Day {nav.planDay} Complete
+                </button>
+                <div style={{ marginTop: 8, font: `12px ${t.fontBody}`, color: t.inkMute, textAlign: 'center' }}>
+                  {nav.planTitle} · Day {nav.planDay} of {nav.planTotalDays}
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 18, flexShrink: 0,
+                  background: `${planColor}18`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icon name="check" size={16} stroke={2.2} color={planColor} />
+                </div>
+                <div>
+                  <div style={{ font: `600 14px ${t.fontUi}`, color: planColor }}>Day {nav.planDay} complete</div>
+                  <button
+                    onClick={() => navigate(nav.returnTo!)}
+                    style={{
+                      marginTop: 4, background: 'none', border: 'none', padding: 0,
+                      font: `13px ${t.fontBody}`, color: t.inkSoft, cursor: 'pointer',
+                    }}
+                  >
+                    ← Back to {nav.returnLabel}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {showCompletion && nav?.planId && nav.planDay != null && nav.planTotalDays != null && (
+        <PlanCompletionSheet
+          t={t}
+          accentColor={t.palette[nav.planAccentIndex ?? 0]}
+          planTitle={nav.planTitle ?? ''}
+          totalDays={nav.planTotalDays}
+          dayNum={nav.planDay}
+          onNext={nav.planDay < nav.planTotalDays
+            ? () => { setShowCompletion(false); navigate(nav.returnTo!); }
+            : undefined}
+          onClose={() => { setShowCompletion(false); navigate(nav.returnTo!); }}
+        />
+      )}
 
       {showPicker && (
         <NavigationPicker

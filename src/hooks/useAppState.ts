@@ -162,7 +162,12 @@ export function useAppState() {
     });
   }, []);
 
-  return { state, update, updateLesson, setReflection, setAnswer, toggleHighlight, setPrefs, addDevotional, markDevotionalRead, addPlan, markPlanDayComplete, setPlanDay };
+  const removePlan = useCallback((planId: string) => {
+    const { [planId]: _removed, ...rest } = memory.readingPlans;
+    persist({ ...memory, readingPlans: rest });
+  }, []);
+
+  return { state, update, updateLesson, setReflection, setAnswer, toggleHighlight, setPrefs, addDevotional, markDevotionalRead, addPlan, markPlanDayComplete, setPlanDay, removePlan };
 }
 
 export function useTheme() {

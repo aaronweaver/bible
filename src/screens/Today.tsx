@@ -128,6 +128,50 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
         </div>
       </button>
 
+      {/* Share buttons */}
+      <div style={{ margin: '12px 18px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <button
+          onClick={() => {
+            const msg = encodeURIComponent('Come and study the Bible with me! https://aaronweaver.github.io/bible/');
+            window.open(`sms:?body=${msg}`);
+          }}
+          style={{
+            background: accent.c, color: accent.on, border: 'none',
+            borderRadius: t.radiusSm, padding: '12px 10px',
+            font: `600 13px ${t.fontUi}`, cursor: 'pointer', letterSpacing: 0.1,
+          }}>
+          Share with a Friend
+        </button>
+        <button
+          onClick={() => setShowPartnerModal(true)}
+          style={{
+            background: t.paper, color: t.ink, border: `0.5px solid ${t.paperEdge}`,
+            borderRadius: t.radiusSm, padding: '12px 10px',
+            font: `600 13px ${t.fontUi}`, cursor: 'pointer', letterSpacing: 0.1,
+          }}>
+          Request a Bible Study Partner
+        </button>
+      </div>
+
+      {/* Course progress */}
+      <SectionHeader t={t} title="Course progress" />
+      <div onClick={() => navigate('/lessons')} style={{
+        margin: '0 18px', padding: '16px 18px',
+        background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
+        display: 'flex', gap: 16, alignItems: 'center', cursor: 'pointer',
+      }}>
+        <ProgressRing pct={pct} accent={accent.c} t={t} />
+        <div style={{ flex: 1 }}>
+          <div style={{ font: `500 22px/1.1 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.3 }}>
+            {completedCount} of 10 lessons
+          </div>
+          <div style={{ font: `13px ${t.fontBody}`, color: t.inkSoft, marginTop: 2 }}>
+            New Believers Foundation Course
+          </div>
+        </div>
+        <Icon name="chev-r" size={18} color={t.inkMute} />
+      </div>
+
       {/* Today's devotional card */}
       {devAdded && (
         <>
@@ -257,31 +301,6 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
         </>
       )}
 
-      {/* Share buttons */}
-      <div style={{ margin: '12px 18px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        <button
-          onClick={() => {
-            const msg = encodeURIComponent('Come and study the Bible with me! https://aaronweaver.github.io/bible/');
-            window.open(`sms:?body=${msg}`);
-          }}
-          style={{
-            background: accent.c, color: accent.on, border: 'none',
-            borderRadius: t.radiusSm, padding: '12px 10px',
-            font: `600 13px ${t.fontUi}`, cursor: 'pointer', letterSpacing: 0.1,
-          }}>
-          Share with a Friend
-        </button>
-        <button
-          onClick={() => setShowPartnerModal(true)}
-          style={{
-            background: t.paper, color: t.ink, border: `0.5px solid ${t.paperEdge}`,
-            borderRadius: t.radiusSm, padding: '12px 10px',
-            font: `600 13px ${t.fontUi}`, cursor: 'pointer', letterSpacing: 0.1,
-          }}>
-          Request a Bible Study Partner
-        </button>
-      </div>
-
       {/* Study partner modal */}
       {showPartnerModal && (
         <div onClick={() => setShowPartnerModal(false)} style={{
@@ -315,25 +334,6 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
           </div>
         </div>
       )}
-
-      {/* Course progress */}
-      <SectionHeader t={t} title="Course progress" />
-      <div onClick={() => navigate('/lessons')} style={{
-        margin: '0 18px', padding: '16px 18px',
-        background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
-        display: 'flex', gap: 16, alignItems: 'center', cursor: 'pointer',
-      }}>
-        <ProgressRing pct={pct} accent={accent.c} t={t} />
-        <div style={{ flex: 1 }}>
-          <div style={{ font: `500 22px/1.1 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.3 }}>
-            {completedCount} of 10 lessons
-          </div>
-          <div style={{ font: `13px ${t.fontBody}`, color: t.inkSoft, marginTop: 2 }}>
-            New Believers Foundation Course
-          </div>
-        </div>
-        <Icon name="chev-r" size={18} color={t.inkMute} />
-      </div>
 
       {/* Habits — commented out until streak/verse tracking is wired up
       <SectionHeader t={t} title="This week" />

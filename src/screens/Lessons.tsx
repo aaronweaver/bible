@@ -151,13 +151,11 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
             const isDone = !!state.progress[l.id]?.completed;
             const sectionsDone = state.progress[l.id]?.sectionsDone || 0;
             const inProg = !isDone && sectionsDone > 0;
-            const prevDone = i === 0 || !!state.progress[LESSONS[i - 1].id]?.completed;
-            const isLocked = !prevDone && !inProg && !isDone;
             const tone = palette[i % palette.length];
             return (
               <LessonRow key={l.id} t={t} tone={tone} lesson={l} idx={i}
                 isLast={i === LESSONS.length - 1}
-                state={isDone ? 'done' : inProg ? 'progress' : isLocked ? 'locked' : 'available'}
+                state={isDone ? 'done' : inProg ? 'progress' : 'available'}
                 sectionsDone={sectionsDone}
                 onOpen={() => navigate(`/lessons/${l.id}`)} />
             );
@@ -650,18 +648,16 @@ function LessonRow({ t, tone, lesson, idx, isLast, state, sectionsDone, onOpen }
               </div>
             </div>
           )}
-          {isDone && (
-            <button
-              onClick={(e) => { e.stopPropagation(); shareLesson(lesson); }}
-              style={{
-                marginLeft: 'auto', background: 'none', border: 'none',
-                padding: '2px 4px', cursor: 'pointer', color: tone,
-                display: 'flex', alignItems: 'center',
-              }}
-            >
-              <Icon name="share" size={16} color={tone} stroke={1.8} />
-            </button>
-          )}
+          <button
+            onClick={(e) => { e.stopPropagation(); shareLesson(lesson); }}
+            style={{
+              marginLeft: 'auto', background: 'none', border: 'none',
+              padding: '2px 4px', cursor: 'pointer', color: tone,
+              display: 'flex', alignItems: 'center',
+            }}
+          >
+            <Icon name="share" size={16} color={tone} stroke={1.8} />
+          </button>
         </div>
       </button>
     </div>

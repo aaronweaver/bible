@@ -17,7 +17,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
     book?: string; chapter?: number; verse?: number;
     returnTo?: string; returnLabel?: string;
     openPicker?: boolean;
-    isLastReading?: boolean;
+    lastReadingBook?: string; lastReadingChapter?: number;
     planId?: string; planDay?: number; planTotalDays?: number;
     planAccentIndex?: number; planTitle?: string;
   } | null;
@@ -167,8 +167,9 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
         </button>
       </div>
 
-      {/* Plan day completion — shown whenever reading from a plan */}
-      {nav?.planId && nav.planDay != null && nav.planTotalDays != null && (() => {
+      {/* Plan day completion — shown only when on the last chapter of the day */}
+      {nav?.planId && nav.planDay != null && nav.planTotalDays != null &&
+        nav.lastReadingBook === book && nav.lastReadingChapter === chapter && (() => {
         const planColor = t.palette[nav.planAccentIndex ?? 0];
         const alreadyDone = state.readingPlans[nav.planId]?.completedDays?.includes(nav.planDay) ?? false;
         return (

@@ -14,7 +14,7 @@ type Tab = 'mine' | 'find' | 'completed';
 
 export function Lessons({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
   const navigate = useNavigate();
-  const { state, addDevotional, addPlan, removePlan } = useAppState();
+  const { state, addDevotional, addPlan, removePlan, removeLessonProgress, removeDevotional } = useAppState();
   const { dark, toggleDark } = useTheme();
   const [tab, setTab] = React.useState<Tab>('mine');
   const [expanded, setExpanded] = React.useState(() => {
@@ -69,6 +69,7 @@ export function Lessons({ t, accent }: { t: Theme; accent: { c: string; on: stri
             return next;
           })}
           state={state} navigate={navigate} onRemovePlan={removePlan}
+          onRemoveLessonProgress={removeLessonProgress} onRemoveDevotional={removeDevotional}
         />
       )}
       {tab === 'find' && (
@@ -83,10 +84,12 @@ export function Lessons({ t, accent }: { t: Theme; accent: { c: string; on: stri
   );
 }
 
-function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onToggle, state, navigate, onRemovePlan }: {
+function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onToggle, state, navigate, onRemovePlan, onRemoveLessonProgress, onRemoveDevotional }: {
   t: Theme; accent: { c: string; on: string }; completedCount: number; totalMinutes: number;
   expanded: boolean; onToggle: () => void; state: any; navigate: (path: string) => void;
   onRemovePlan: (id: string) => void;
+  onRemoveLessonProgress: () => void;
+  onRemoveDevotional: () => void;
 }) {
   const palette = t.palette;
   const devColor = t.palette[DEVOTIONAL_SERIES.accentIndex];
@@ -133,8 +136,24 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
             </div>
           </div>
         </div>
-        <div style={{ color: t.inkMute, flexShrink: 0, marginLeft: 4, transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-          <Icon name="chev-d" size={18} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          {completedCount > 0 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setStopConfirm('lesson-course'); }}
+              style={{
+                width: 32, height: 32, borderRadius: 16,
+                background: `${t.inkMute}14`, border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: t.inkMute, font: `700 16px ${t.fontUi}`,
+              }}
+              aria-label="Stop course"
+            >
+              ···
+            </button>
+          )}
+          <div style={{ color: t.inkMute, transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+            <Icon name="chev-d" size={18} />
+          </div>
         </div>
       </button>
 
@@ -202,7 +221,21 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
               </div>
             </div>
           </div>
-          <Icon name="chev-r" size={16} color={t.inkMute} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); setStopConfirm('devotional'); }}
+              style={{
+                width: 32, height: 32, borderRadius: 16,
+                background: `${t.inkMute}14`, border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: t.inkMute, font: `700 16px ${t.fontUi}`,
+              }}
+              aria-label="Stop devotional"
+            >
+              ···
+            </button>
+            <Icon name="chev-r" size={16} color={t.inkMute} />
+          </div>
         </button>
       )}
 
@@ -265,9 +298,28 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
         );
       })}
 
-      {/* Stop plan confirmation modal */}
+      {/* Stop confirmation modal */}
       {stopConfirm && (() => {
-        const planMeta = READING_PLANS_META.find(m => m.id === stopConfirm);
+        const isPlan = stopConfirm !== 'lesson-course' && stopConfirm !== 'devotional';
+        const planMeta = isPlan ? READING_PLANS_META.find(m => m.id === stopConfirm) : null;
+        const title = stopConfirm === 'lesson-course'
+          ? 'New Believers Foundation'
+          : stopConfirm === 'devotional'
+            ? 'Morning and Evening'
+            : planMeta?.title ?? '';
+        const body = stopConfirm === 'lesson-course'
+          ? 'Your lesson progress will be removed. You can start again any time.'
+          : stopConfirm === 'devotional'
+            ? 'Your reading progress will be removed. You can add it again from Find.'
+            : 'Your progress will be removed. You can always add it again from Find.';
+        const btnLabel = stopConfirm === 'lesson-course' ? 'Stop Course'
+          : stopConfirm === 'devotional' ? 'Stop Devotional' : 'Stop Plan';
+        const handleStop = () => {
+          if (stopConfirm === 'lesson-course') onRemoveLessonProgress();
+          else if (stopConfirm === 'devotional') onRemoveDevotional();
+          else onRemovePlan(stopConfirm);
+          setStopConfirm(null);
+        };
         return (
           <div onClick={() => setStopConfirm(null)} style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 60,
@@ -281,20 +333,20 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
               <style>{`@keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }`}</style>
               <div style={{ width: 36, height: 4, background: t.rule, borderRadius: 2, margin: '0 auto 20px' }} />
               <div style={{ font: `600 18px/1.2 ${t.fontDisplay}`, color: t.ink, marginBottom: 8 }}>
-                Stop "{planMeta?.title}"?
+                Stop "{title}"?
               </div>
               <div style={{ font: `14px/1.55 ${t.fontBody}`, color: t.inkSoft, marginBottom: 24 }}>
-                Your progress will be removed. You can always add it again from Find.
+                {body}
               </div>
               <button
-                onClick={() => { onRemovePlan(stopConfirm); setStopConfirm(null); }}
+                onClick={handleStop}
                 style={{
                   width: '100%', background: '#e53e3e', color: '#fff', border: 'none',
                   borderRadius: 12, padding: '14px',
                   font: `600 15px ${t.fontUi}`, cursor: 'pointer', marginBottom: 10,
                 }}
               >
-                Stop Plan
+                {btnLabel}
               </button>
               <button
                 onClick={() => setStopConfirm(null)}

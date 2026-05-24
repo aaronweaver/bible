@@ -167,7 +167,15 @@ export function useAppState() {
     persist({ ...memory, readingPlans: rest });
   }, []);
 
-  return { state, update, updateLesson, setReflection, setAnswer, toggleHighlight, setPrefs, addDevotional, markDevotionalRead, addPlan, markPlanDayComplete, setPlanDay, removePlan };
+  const removeLessonProgress = useCallback(() => {
+    persist({ ...memory, progress: {} });
+  }, []);
+
+  const removeDevotional = useCallback(() => {
+    persist({ ...memory, devotional: { status: 'not-added', read: {} } });
+  }, []);
+
+  return { state, update, updateLesson, setReflection, setAnswer, toggleHighlight, setPrefs, addDevotional, markDevotionalRead, addPlan, markPlanDayComplete, setPlanDay, removePlan, removeLessonProgress, removeDevotional };
 }
 
 export function useTheme() {

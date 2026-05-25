@@ -170,9 +170,10 @@ function StoryScreen({
             </div>
             <div style={{
               display: 'flex', gap: 10, overflowX: 'auto',
-              paddingTop: 4, paddingBottom: 4, paddingLeft: 22,
+              padding: '4px 0',
               scrollSnapType: 'x mandatory',
             }}>
+              <div style={{ flexShrink: 0, width: 12 }} />
               {others.map((s, i) => {
                 const tones = t.palette;
                 const tone = tones[i % tones.length];
@@ -203,7 +204,7 @@ function StoryScreen({
                   </button>
                 );
               })}
-              <div style={{ flex: '0 0 22px' }} />
+              <div style={{ flexShrink: 0, width: 12 }} />
             </div>
           </>
         );

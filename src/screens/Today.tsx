@@ -354,9 +354,10 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
       <div style={{
         marginTop: 12,
         display: 'flex', gap: 10, overflowX: 'auto',
-        paddingTop: 4, paddingBottom: 4, paddingLeft: 18,
+        padding: '4px 0',
         scrollSnapType: 'x mandatory',
       }}>
+        <div style={{ flexShrink: 0, width: 8 }} />
         {STORIES.slice(1).map((s, i) => (
           <MiniStoryCard key={s.id} t={t} story={s}
             tone={palette[(i + 1) % palette.length]}
@@ -380,7 +381,7 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
             <div style={{ font: `12px/1.3 ${t.fontBody}`, color: t.inkSoft, marginTop: 3 }}>Tell others how Christ changed your life.</div>
           </div>
         </div>
-        <div style={{ flex: '0 0 18px' }} />
+        <div style={{ flexShrink: 0, width: 8 }} />
       </div>
 
       {/* Last read */}

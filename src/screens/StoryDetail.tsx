@@ -14,17 +14,19 @@ export function StoryDetail({ t, accent }: { t: Theme; accent: { c: string; on: 
   const story = STORIES.find(s => s.id === id);
   if (!story) { navigate('/'); return null; }
 
-  return <StoryScreen t={t} accent={accent} fontScale={fontScale} story={story} onBack={() => navigate(-1)} />;
+  return <StoryScreen t={t} accent={accent} fontScale={fontScale} story={story}
+    onBack={() => navigate(-1)} onOpenStory={(sid) => navigate(`/stories/${sid}`)} />;
 }
 
 function StoryScreen({
-  t, accent, fontScale, story, onBack,
+  t, accent, fontScale, story, onBack, onOpenStory,
 }: {
   t: Theme;
   accent: { c: string; on: string };
   fontScale: number;
   story: Story;
   onBack: () => void;
+  onOpenStory: (id: string) => void;
 }) {
   const [imgOk, setImgOk] = useState(!!story.coverImage);
   const [saved, setSaved] = useState(false);
@@ -132,6 +134,56 @@ function StoryScreen({
           <Block key={i} block={block} t={t} accent={accent} fontScale={fontScale} author={story.author} />
         ))}
       </div>
+
+      {/* More stories scroller */}
+      {(() => {
+        const others = STORIES.filter(s => s.id !== story.id);
+        if (others.length === 0) return null;
+        return (
+          <>
+            <div style={{ padding: '24px 22px 10px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+              <div style={{ font: `12px ${t.fontUi}`, letterSpacing: 1.5, textTransform: 'uppercase' as const, color: t.inkMute, fontWeight: 600 }}>More stories</div>
+            </div>
+            <div style={{
+              display: 'flex', gap: 10, overflowX: 'auto',
+              paddingTop: 4, paddingBottom: 4, paddingLeft: 22,
+              scrollSnapType: 'x mandatory',
+            }}>
+              {others.map((s, i) => {
+                const tones = t.palette;
+                const tone = tones[i % tones.length];
+                const ini = (s.author || '?').split(/\s+/).map(c => c[0]).slice(0, 2).join('').toUpperCase();
+                return (
+                  <button key={s.id} onClick={() => onOpenStory(s.id)} style={{
+                    flex: '0 0 auto', width: 220, scrollSnapAlign: 'start',
+                    background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radiusSm,
+                    padding: '14px 14px', textAlign: 'left', cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', gap: 10, minHeight: 132,
+                    position: 'relative', overflow: 'hidden',
+                  }}>
+                    <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: tone }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{
+                        width: 26, height: 26, borderRadius: 13, background: `${tone}22`, color: tone,
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        font: `600 11px ${t.fontUi}`, letterSpacing: 0.4,
+                      }}>{ini}</span>
+                      <span style={{ font: `italic 13px ${t.fontBody}`, color: t.inkSoft }}>{s.author}</span>
+                    </div>
+                    <div style={{ font: `500 15px/1.2 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.2 }}>
+                      {s.title}
+                    </div>
+                    <div style={{ marginTop: 'auto', font: `11px ${t.fontUi}`, color: t.inkMute, letterSpacing: 0.3 }}>
+                      {s.readMinutes} min · {s.publishedRel}
+                    </div>
+                  </button>
+                );
+              })}
+              <div style={{ flex: '0 0 22px' }} />
+            </div>
+          </>
+        );
+      })()}
 
       {/* Footer CTA */}
       <div style={{ padding: '16px 22px 8px' }}>

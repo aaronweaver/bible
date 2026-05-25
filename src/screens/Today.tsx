@@ -5,6 +5,7 @@ import { TopBar, DarkToggle, SectionHeader } from '../components/TopBar';
 import { ProgressRing, Tile } from '../components/Bits';
 import { Icon } from '../icons';
 import { LESSONS, VERSE_OF_DAY } from '../data/lessons';
+import { STORIES, type Story } from '../data/stories';
 import { useAppState, useTheme } from '../hooks/useAppState';
 import { getEntry, todayDateKey, formatDevotionalDate } from '../data/devotional';
 import { READING_PLANS_META, getPlanDays, readingsLabel, planProgressPct, type ReadingDay } from '../data/readingPlans';
@@ -343,6 +344,44 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
       </div>
       */}
 
+      {/* My Stories */}
+      <div style={{ padding: '24px 22px 10px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+        <div style={{ font: `12px ${t.fontUi}`, letterSpacing: 1.5, textTransform: 'uppercase', color: t.inkMute, fontWeight: 600 }}>My Stories</div>
+        <div style={{ font: `12px ${t.fontUi}`, color: t.inkMute, letterSpacing: 0.3 }}>{STORIES.length} testimonies</div>
+      </div>
+      <FeaturedStoryCard t={t} accent={accent} story={STORIES[0]} palette={palette}
+        onOpen={() => navigate(`/stories/${STORIES[0].id}`)} />
+      <div style={{
+        marginTop: 12,
+        display: 'flex', gap: 10, overflowX: 'auto',
+        padding: '4px 18px 4px',
+        scrollSnapType: 'x mandatory',
+      }}>
+        {STORIES.slice(1).map((s, i) => (
+          <MiniStoryCard key={s.id} t={t} story={s}
+            tone={palette[(i + 1) % palette.length]}
+            onOpen={() => navigate(`/stories/${s.id}`)} />
+        ))}
+        <div style={{
+          flex: '0 0 auto', width: 168, scrollSnapAlign: 'start',
+          border: `1.5px dashed ${t.paperEdge}`, borderRadius: t.radiusSm,
+          padding: '14px 12px', display: 'flex', flexDirection: 'column',
+          alignItems: 'flex-start', justifyContent: 'space-between',
+          background: 'transparent', minHeight: 132,
+        }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 16, background: `${accent.c}18`, color: accent.c,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon name="cross" size={16} />
+          </div>
+          <div>
+            <div style={{ font: `500 14px/1.2 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.1 }}>Share your story</div>
+            <div style={{ font: `12px/1.3 ${t.fontBody}`, color: t.inkSoft, marginTop: 3 }}>Tell others how Christ changed your life.</div>
+          </div>
+        </div>
+      </div>
+
       {/* Last read */}
       <SectionHeader t={t} title="Last read" />
       <button onClick={() => navigate('/bible')} style={{
@@ -370,5 +409,119 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
         </div>
       </button>
     </div>
+  );
+}
+
+function FeaturedStoryCard({ t, accent, story, palette, onOpen }: {
+  t: Theme; accent: { c: string; on: string }; story: Story; palette: string[]; onOpen: () => void;
+}) {
+  const [imgOk, setImgOk] = React.useState(!!story.coverImage);
+  const initials = (story.author || '?').split(/\s+/).map(s => s[0]).slice(0, 2).join('').toUpperCase();
+  const hasImage = story.coverImage && imgOk;
+  return (
+    <button onClick={onOpen} style={{
+      display: 'block', width: 'calc(100% - 36px)', margin: '0 18px',
+      background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
+      padding: 0, textAlign: 'left', cursor: 'pointer', overflow: 'hidden',
+      boxShadow: '0 18px 36px -22px rgba(0,0,0,0.28)',
+    }}>
+      {/* Cover image — only rendered when an image is available */}
+      {story.coverImage && (
+        <div style={{
+          position: 'relative', width: '100%', aspectRatio: '16 / 10',
+          background: hasImage ? `url(${story.coverImage}) center/cover no-repeat` : 'transparent',
+          display: hasImage ? 'block' : 'none',
+        }}>
+          <img src={story.coverImage} alt="" onError={() => setImgOk(false)}
+            style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.7) 100%)',
+          }} />
+          <div style={{
+            position: 'absolute', top: 14, left: 14,
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: 'rgba(255,255,255,0.92)', color: '#1a1a1a',
+            padding: '5px 10px 5px 8px', borderRadius: 999,
+            font: `600 11px ${t.fontUi}`, letterSpacing: 0.6, textTransform: 'uppercase' as const,
+            backdropFilter: 'blur(8px)',
+          }}>
+            <Icon name="sparkles" size={12} filled color="#1a1a1a" /> Featured testimony
+          </div>
+          <div style={{ position: 'absolute', left: 16, right: 16, bottom: 14, color: '#fff' }}>
+            <div style={{ font: `500 22px/1.15 ${t.fontDisplay}`, letterSpacing: -0.3 }}>
+              {story.title}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, font: `13px ${t.fontBody}`, opacity: 0.92 }}>
+              <span style={{
+                width: 22, height: 22, borderRadius: 11, background: 'rgba(255,255,255,0.2)',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                font: `600 10px ${t.fontUi}`, letterSpacing: 0.4,
+              }}>{initials}</span>
+              <span style={{ fontStyle: 'italic' }}>{story.author}</span>
+              <span style={{ width: 3, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.6)' }} />
+              <span>{story.readMinutes} min read</span>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Text-only layout when no image */}
+      {!hasImage && (
+        <div style={{ padding: '18px 18px 16px' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: `${accent.c}15`, color: accent.c,
+            padding: '5px 10px 5px 8px', borderRadius: 999,
+            font: `600 11px ${t.fontUi}`, letterSpacing: 0.6, textTransform: 'uppercase' as const,
+          }}>
+            <Icon name="sparkles" size={12} filled color={accent.c} /> Featured testimony
+          </div>
+          <div style={{ font: `500 22px/1.2 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.3, marginTop: 12 }}>
+            {story.title}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, font: `13px ${t.fontBody}`, color: t.inkSoft }}>
+            <span style={{
+              width: 22, height: 22, borderRadius: 11, background: `${accent.c}18`, color: accent.c,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              font: `600 10px ${t.fontUi}`, letterSpacing: 0.4,
+            }}>{initials}</span>
+            <span style={{ fontStyle: 'italic' }}>{story.author}</span>
+            <span style={{ width: 3, height: 3, borderRadius: 2, background: t.inkMute }} />
+            <span>{story.readMinutes} min read</span>
+          </div>
+        </div>
+      )}
+    </button>
+  );
+}
+
+function MiniStoryCard({ t, story, tone, onOpen }: {
+  t: Theme; story: Story; tone: string; onOpen: () => void;
+}) {
+  const initials = (story.author || '?').split(/\s+/).map(s => s[0]).slice(0, 2).join('').toUpperCase();
+  return (
+    <button onClick={onOpen} style={{
+      flex: '0 0 auto', width: 220, scrollSnapAlign: 'start',
+      background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radiusSm,
+      padding: '14px 14px', textAlign: 'left', cursor: 'pointer',
+      display: 'flex', flexDirection: 'column', gap: 10, minHeight: 132,
+      position: 'relative', overflow: 'hidden',
+    }}>
+      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: tone }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{
+          width: 26, height: 26, borderRadius: 13, background: `${tone}22`, color: tone,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          font: `600 11px ${t.fontUi}`, letterSpacing: 0.4,
+        }}>{initials}</span>
+        <span style={{ font: `italic 13px ${t.fontBody}`, color: t.inkSoft }}>{story.author}</span>
+      </div>
+      <div style={{ font: `500 15px/1.2 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.2 }}>
+        {story.title}
+      </div>
+      <div style={{ marginTop: 'auto', font: `11px ${t.fontUi}`, color: t.inkMute, letterSpacing: 0.3 }}>
+        {story.readMinutes} min · {story.publishedRel}
+      </div>
+    </button>
   );
 }

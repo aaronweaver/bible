@@ -16,6 +16,7 @@ import { LessonDetail } from './screens/LessonDetail';
 import { Profile } from './screens/Profile';
 import { DevotionalReader } from './screens/DevotionalReader';
 import { PlanReader } from './screens/PlanReader';
+import { StoryDetail } from './screens/StoryDetail';
 
 export function App() {
   const { dark: isDark } = useTheme();
@@ -46,6 +47,7 @@ export function App() {
         <Route path="/profile" element={<Profile t={t} accent={accent} />} />
         <Route path="/devotional/:date/:period" element={<DevotionalReader t={t} />} />
         <Route path="/plan/:planId/day/:day" element={<PlanReader t={t} />} />
+        <Route path="/stories/:id" element={<StoryDetail t={t} accent={accent} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <BottomNav t={t} accent={accent} />

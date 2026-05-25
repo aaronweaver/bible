@@ -34,7 +34,7 @@ function StoryScreen({
 
   return (
     <div style={{ paddingBottom: 24, position: 'relative' }}>
-      {/* Floating back / save / settings buttons */}
+      {/* Floating back / save / share buttons */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 30,
         display: 'flex', alignItems: 'center', gap: 8,
@@ -62,6 +62,30 @@ function StoryScreen({
           pointerEvents: 'auto',
         }}>
           <Icon name="bookmark" size={16} filled={saved} color={saved ? accent.c : '#1a1a1a'} />
+        </button>
+        <button onClick={() => {
+          const url = `https://aaronweaver.github.io/bible/stories/${story.id}`;
+          if (navigator.share) {
+            navigator.share({
+              title: story.title,
+              text: `${story.title} — a testimony by ${story.author}`,
+              url,
+            });
+          } else {
+            navigator.clipboard?.writeText(url);
+          }
+        }} style={{
+          height: 38, borderRadius: 19, border: 'none',
+          background: accent.c, color: accent.on, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '0 16px 0 12px',
+          boxShadow: `0 6px 16px -6px ${accent.c}`,
+          backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          pointerEvents: 'auto',
+          font: `600 14px ${t.fontUi}`,
+        }}>
+          <Icon name="share" size={16} color={accent.on} />
+          Share
         </button>
       </div>
 

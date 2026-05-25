@@ -21,7 +21,7 @@ export type AppState = {
   progress: Record<number, LessonProgress>;
   bibleHighlights: Record<string, number[]>;
   lastRead: { book: string; chapter: number; verse?: number } | null;
-  prefs: { dark: boolean; fontScale: number };
+  prefs: { dark: boolean; fontScale: number; verseLayout: 'paragraph' | 'verse' };
   devotional: DevotionalProgress;
   readingPlans: Record<string, ReadingPlanProgress>;
 };
@@ -32,7 +32,7 @@ const DEFAULT_STATE: AppState = {
   progress: {},
   bibleHighlights: {},
   lastRead: { book: 'John', chapter: 3, verse: 16 },
-  prefs: { dark: false, fontScale: 100 },
+  prefs: { dark: false, fontScale: 100, verseLayout: 'paragraph' as const },
   devotional: { status: 'not-added', read: {} },
   readingPlans: {},
 };

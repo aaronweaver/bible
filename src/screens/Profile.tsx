@@ -9,6 +9,8 @@ import { useAppState, useTheme } from '../hooks/useAppState';
 export function Profile({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
   const { state } = useAppState();
   const { dark, toggleDark, fontScale, setFontScale } = useTheme();
+  const { setPrefs } = useAppState();
+  const verseLayout = state.prefs.verseLayout ?? 'paragraph';
   const completedCount = LESSONS.filter((l) => state.progress[l.id]?.completed).length;
   const reflCount = Object.values(state.progress).reduce(
     (s, l) => s + Object.values(l?.reflections || {}).filter((v) => v?.trim()).length,
@@ -62,6 +64,29 @@ export function Profile({ t, accent }: { t: Theme; accent: { c: string; on: stri
           onChange={(e) => setFontScale(Number(e.target.value))}
           style={{ width: '100%', accentColor: accent.c }}
         />
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginTop: 16, color: t.ink, font: `15px ${t.fontBody}`,
+        }}>
+          <span>Layout</span>
+          <div style={{
+            display: 'flex', gap: 4, background: t.chip,
+            borderRadius: 10, padding: 3,
+          }}>
+            {(['paragraph', 'verse'] as const).map((opt) => (
+              <button key={opt} onClick={() => setPrefs({ verseLayout: opt })} style={{
+                padding: '5px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                font: `500 13px ${t.fontUi}`,
+                background: verseLayout === opt ? (dark ? '#fff' : '#fff') : 'transparent',
+                color: verseLayout === opt ? '#000' : t.inkSoft,
+                boxShadow: verseLayout === opt ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
+                transition: 'background 0.15s, color 0.15s',
+              }}>
+                {opt.charAt(0).toUpperCase() + opt.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <SectionHeader t={t} title="Settings" />
@@ -70,14 +95,15 @@ export function Profile({ t, accent }: { t: Theme; accent: { c: string; on: stri
         borderRadius: 14, overflow: 'hidden',
       }}>
         {[
-          { label: 'Reading plan', value: 'New Believers' },
-          { label: 'Theme', value: dark ? 'Dark' : 'Light' },
-          { label: 'About Cornerstone', value: 'v0.1' },
+          { label: 'Reading plan', value: 'New Believers', onPress: undefined as (() => void) | undefined },
+          { label: 'Theme', value: dark ? 'Dark' : 'Light', onPress: toggleDark },
+          { label: 'About Cornerstone', value: 'v0.1', onPress: undefined },
         ].map((row, i, arr) => (
-          <div key={row.label} style={{
+          <div key={row.label} onClick={row.onPress} style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '14px 16px',
             borderBottom: i < arr.length - 1 ? `0.5px solid ${t.rule}` : 'none',
+            cursor: row.onPress ? 'pointer' : 'default',
           }}>
             <div style={{ font: `15px ${t.fontBody}`, color: t.ink }}>{row.label}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

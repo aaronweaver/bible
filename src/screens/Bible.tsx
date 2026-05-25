@@ -5,6 +5,7 @@ import { TopBar, CircleBtn, DarkToggle } from '../components/TopBar';
 import { Icon } from '../icons';
 import { BIBLE_BOOKS, getChapterBlocks, getVerseCount, formatBookTitle, isNumberedBook, type Block } from '../data/bible';
 import { useAppState, useTheme } from '../hooks/useAppState';
+import { setUiState } from '../hooks/useUiState';
 import { PlanCompletionSheet } from '../components/PlanCompletionSheet';
 
 export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
@@ -32,6 +33,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
   const [targetVerse, setTargetVerse] = useState<number | null>(null);
   const [showCompletion, setShowCompletion] = useState(false);
   const [flashVerse, setFlashVerse] = useState<number | null>(null);
+  const [immersive, setImmersive] = useState(false);
 
   const key = `${book} ${chapter}`;
   const highlighted = new Set(state.bibleHighlights[key] ?? []);
@@ -71,9 +73,55 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
     }
   }, [verseCount, targetVerse, nav?.verse, nav?.startVerse]);
 
+  // Immersive mode: hide tabs when scrolling through middle of chapter.
+  // Uses a ref so immersive is sticky — only clears at top/bottom, never mid-scroll-up.
+  const immersiveRef = useRef(false);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const atTop = y < 60;
+      const atBottom = y + window.innerHeight >= document.documentElement.scrollHeight - 80;
+      let next: boolean;
+      if (atTop || atBottom) {
+        next = false;
+      } else if (y > lastY + 2) {
+        // Scrolling down past a small dead-zone → go immersive
+        next = true;
+      } else {
+        // Scrolling up in the middle — stay in current state (no toggle back)
+        next = immersiveRef.current;
+      }
+      if (next !== immersiveRef.current) {
+        immersiveRef.current = next;
+        setImmersive(next);
+        setUiState({ immersive: next });
+      }
+      lastY = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      immersiveRef.current = false;
+      setUiState({ immersive: false, bibleNav: null });
+    };
+  }, []);
+
   const maxChapter = BIBLE_BOOKS.find((b) => b.name === book)?.chapters ?? 1;
   const prevChapter = () => { if (chapter > 1) { setChapter(chapter - 1); window.scrollTo(0, 0); } };
   const nextChapter = () => { if (chapter < maxChapter) { setChapter(chapter + 1); window.scrollTo(0, 0); } };
+
+  // Keep bibleNav in sync so BottomNav can render the chapter bar
+  useEffect(() => {
+    setUiState({
+      bibleNav: {
+        book, chapter, maxChapter,
+        onPrev: prevChapter,
+        onNext: nextChapter,
+        onPicker: () => setShowPicker(true),
+      },
+    });
+  }, [book, chapter, maxChapter]);
 
   const handleNavigate = ({ book: b, chapter: c, verse: v }: { book: string; chapter: number; verse: number }) => {
     setBook(b);
@@ -82,10 +130,36 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
     setShowPicker(false);
   };
 
+  const verseLayout = state.prefs.verseLayout ?? 'paragraph';
+
   return (
     <div style={{ paddingBottom: 24 }}>
-      <TopBar t={t} eyebrow="Bible"
-        right={<DarkToggle t={t} darkMode={dark} onToggle={toggleDark} />} />
+      <div style={{
+        overflow: 'hidden',
+        opacity: immersive ? 0 : 1,
+        maxHeight: immersive ? 0 : 200,
+        transition: 'opacity 0.25s ease, max-height 0.3s ease',
+        pointerEvents: immersive ? 'none' : 'auto',
+      }}>
+        <TopBar t={t} eyebrow="Bible"
+          right={<DarkToggle t={t} darkMode={dark} onToggle={toggleDark} />} />
+
+        <div style={{ padding: '0 22px 6px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={() => setShowPicker(true)} style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+            color: t.ink, font: `400 30px ${t.fontDisplay}`, letterSpacing: -0.4,
+          }}>
+            <span>{formatBookTitle(book)}</span>
+            {' '}{chapter}
+            <Icon name="chev-d" size={20} color={t.inkSoft} />
+          </button>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            <CircleBtn t={t}><Icon name="search" size={16} color={t.inkSoft} /></CircleBtn>
+            <CircleBtn t={t}><Icon name="settings" size={16} color={t.inkSoft} /></CircleBtn>
+          </div>
+        </div>
+      </div>
 
       {nav?.returnTo && (
         <button
@@ -105,78 +179,96 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
         </button>
       )}
 
-      <div style={{ padding: '0 22px 6px', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <button onClick={() => setShowPicker(true)} style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-          color: t.ink, font: `400 30px ${t.fontDisplay}`, letterSpacing: -0.4,
-        }}>
-          <span>{formatBookTitle(book)}</span>
-          {' '}{chapter}
-          <Icon name="chev-d" size={20} color={t.inkSoft} />
-        </button>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-          <CircleBtn t={t}><Icon name="search" size={16} color={t.inkSoft} /></CircleBtn>
-          <CircleBtn t={t}><Icon name="settings" size={16} color={t.inkSoft} /></CircleBtn>
-        </div>
-      </div>
-
       {verseCount === 0 ? (
         <div style={{ padding: 22, font: `15px ${t.fontBody}`, color: t.inkSoft }}>
           Loading…
         </div>
       ) : (
         <div style={{ padding: '12px 22px 20px', color: t.ink }}>
-          {displayBlocks.map((block, bi) => (
-            <React.Fragment key={bi}>
-              {block.title && (
-                <h2 style={{
-                  margin: '24px 0 10px',
-                  font: `500 18px/1.25 ${t.fontDisplay}`,
-                  color: t.ink, letterSpacing: -0.2,
-                }}>{block.title}</h2>
-              )}
-              <p style={{
-                margin: '0 0 14px',
-                font: `400 ${17 * fontScale}px/1.7 ${t.fontBody}`,
-                textAlign: 'left',
-              }}>
+          {verseLayout === 'verse' ? (
+            displayBlocks.map((block, bi) => (
+              <React.Fragment key={bi}>
+                {block.title && (
+                  <h2 style={{
+                    margin: '24px 0 10px',
+                    font: `500 18px/1.25 ${t.fontDisplay}`,
+                    color: t.ink, letterSpacing: -0.2,
+                  }}>{block.title}</h2>
+                )}
                 {block.verses.map(({ num, text }) => {
                   const isHL = highlighted.has(num);
                   return (
-                    <span key={num}
+                    <div key={num}
                       ref={(el) => { verseRefs.current[num] = el; }}
-                      onClick={() => toggleHighlight(key, num)} style={{
-                        cursor: 'pointer',
+                      onClick={() => toggleHighlight(key, num)}
+                      style={{
+                        display: 'flex', gap: 14,
+                        alignItems: 'flex-start', cursor: 'pointer',
                         background: flashVerse === num
-                          ? (dark ? '#fbbf2488' : `${accent.c}aa`)
+                          ? (dark ? '#fbbf2422' : `${accent.c}22`)
                           : isHL
-                            ? (dark ? '#fbbf2455' : `${accent.c}66`)
-                            : (nav?.verse === num ? (dark ? '#fbbf2433' : `${accent.c}44`) : 'transparent'),
-                        borderRadius: 3, padding: '1px 2px', transition: 'background 0.15s',
+                            ? (dark ? '#fbbf2418' : `${accent.c}18`)
+                            : (nav?.verse === num ? (dark ? '#fbbf2412' : `${accent.c}12`) : 'transparent'),
+                        borderRadius: 4, margin: '0 -4px', padding: '5px 4px',
+                        transition: 'background 0.15s',
                       }}>
-                      <sup style={{
+                      <span style={{
                         font: `500 11px ${t.fontUi}`, color: t.inkMute,
-                        marginRight: 4, verticalAlign: 'super', letterSpacing: 0.4,
-                      }}>{num}</sup>
-                      {text}{' '}
-                    </span>
+                        minWidth: 22, textAlign: 'right', paddingTop: `${3 * fontScale}px`,
+                        flexShrink: 0, letterSpacing: 0.3,
+                      }}>{num}</span>
+                      <span style={{ flex: 1, font: `400 ${17 * fontScale}px/1.65 ${t.fontBody}` }}>
+                        {text}
+                      </span>
+                    </div>
                   );
                 })}
-              </p>
-            </React.Fragment>
-          ))}
+              </React.Fragment>
+            ))
+          ) : (
+            displayBlocks.map((block, bi) => (
+              <React.Fragment key={bi}>
+                {block.title && (
+                  <h2 style={{
+                    margin: '24px 0 10px',
+                    font: `500 18px/1.25 ${t.fontDisplay}`,
+                    color: t.ink, letterSpacing: -0.2,
+                  }}>{block.title}</h2>
+                )}
+                <p style={{
+                  margin: '0 0 14px',
+                  font: `400 ${17 * fontScale}px/1.7 ${t.fontBody}`,
+                  textAlign: 'left',
+                }}>
+                  {block.verses.map(({ num, text }) => {
+                    const isHL = highlighted.has(num);
+                    return (
+                      <span key={num}
+                        ref={(el) => { verseRefs.current[num] = el; }}
+                        onClick={() => toggleHighlight(key, num)} style={{
+                          cursor: 'pointer',
+                          background: flashVerse === num
+                            ? (dark ? '#fbbf2488' : `${accent.c}aa`)
+                            : isHL
+                              ? (dark ? '#fbbf2455' : `${accent.c}66`)
+                              : (nav?.verse === num ? (dark ? '#fbbf2433' : `${accent.c}44`) : 'transparent'),
+                          borderRadius: 3, padding: '1px 2px', transition: 'background 0.15s',
+                        }}>
+                        <sup style={{
+                          font: `500 11px ${t.fontUi}`, color: t.inkMute,
+                          marginRight: 4, verticalAlign: 'super', letterSpacing: 0.4,
+                        }}>{num}</sup>
+                        {text}{' '}
+                      </span>
+                    );
+                  })}
+                </p>
+              </React.Fragment>
+            ))
+          )}
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 22px 0' }}>
-        <button onClick={prevChapter} disabled={chapter <= 1} style={btn(t, chapter <= 1)}>
-          <Icon name="chev-l" size={16} color={t.inkSoft} /> Prev
-        </button>
-        <button onClick={nextChapter} disabled={chapter >= maxChapter} style={btn(t, chapter >= maxChapter)}>
-          Next <Icon name="chev-r" size={16} color={t.inkSoft} />
-        </button>
-      </div>
 
       {/* Plan day completion — shown only when on the last chapter of the day */}
       {nav?.planId && nav.planDay != null && nav.planTotalDays != null &&
@@ -262,18 +354,11 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
           onClose={() => setShowPicker(false)}
         />
       )}
+
     </div>
   );
 }
 
-function btn(t: Theme, disabled: boolean): React.CSSProperties {
-  return {
-    display: 'flex', alignItems: 'center', gap: 6,
-    background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: 20,
-    padding: '8px 14px', color: t.ink, font: `14px ${t.fontBody}`,
-    cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.4 : 1,
-  };
-}
 
 type PickerStep = 'book' | 'chapter' | 'verse';
 

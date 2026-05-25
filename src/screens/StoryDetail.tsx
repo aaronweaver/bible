@@ -173,14 +173,13 @@ function StoryScreen({
               padding: '4px 0',
               scrollSnapType: 'x mandatory',
             }}>
-              <div style={{ flexShrink: 0, width: 12 }} />
               {others.map((s, i) => {
                 const tones = t.palette;
                 const tone = tones[i % tones.length];
                 const ini = (s.author || '?').split(/\s+/).map(c => c[0]).slice(0, 2).join('').toUpperCase();
                 return (
                   <button key={s.id} onClick={() => onOpenStory(s.id)} style={{
-                    flex: '0 0 auto', width: 220, scrollSnapAlign: 'start',
+                    flex: '0 0 auto', width: 220, scrollSnapAlign: 'start', marginLeft: i === 0 ? 22 : 0,
                     background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radiusSm,
                     padding: '14px 14px', textAlign: 'left', cursor: 'pointer',
                     display: 'flex', flexDirection: 'column', gap: 10, minHeight: 132,

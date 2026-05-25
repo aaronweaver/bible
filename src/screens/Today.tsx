@@ -357,10 +357,10 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
         padding: '4px 0',
         scrollSnapType: 'x mandatory',
       }}>
-        <div style={{ flexShrink: 0, width: 8 }} />
         {STORIES.slice(1).map((s, i) => (
           <MiniStoryCard key={s.id} t={t} story={s}
             tone={palette[(i + 1) % palette.length]}
+            ml={i === 0 ? 18 : 0}
             onOpen={() => navigate(`/stories/${s.id}`)} />
         ))}
         <div style={{
@@ -381,7 +381,7 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
             <div style={{ font: `12px/1.3 ${t.fontBody}`, color: t.inkSoft, marginTop: 3 }}>Tell others how Christ changed your life.</div>
           </div>
         </div>
-        <div style={{ flexShrink: 0, width: 8 }} />
+        <div style={{ flexShrink: 0, width: 18 }} />
       </div>
 
       {/* Last read */}
@@ -497,13 +497,13 @@ function FeaturedStoryCard({ t, accent, story, palette, onOpen }: {
   );
 }
 
-function MiniStoryCard({ t, story, tone, onOpen }: {
-  t: Theme; story: Story; tone: string; onOpen: () => void;
+function MiniStoryCard({ t, story, tone, onOpen, ml = 0 }: {
+  t: Theme; story: Story; tone: string; onOpen: () => void; ml?: number;
 }) {
   const initials = (story.author || '?').split(/\s+/).map(s => s[0]).slice(0, 2).join('').toUpperCase();
   return (
     <button onClick={onOpen} style={{
-      flex: '0 0 auto', width: 220, scrollSnapAlign: 'start',
+      flex: '0 0 auto', width: 220, scrollSnapAlign: 'start', marginLeft: ml,
       background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radiusSm,
       padding: '14px 14px', textAlign: 'left', cursor: 'pointer',
       display: 'flex', flexDirection: 'column', gap: 10, minHeight: 132,

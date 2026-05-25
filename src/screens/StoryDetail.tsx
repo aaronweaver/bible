@@ -173,36 +173,37 @@ function StoryScreen({
               padding: '4px 0',
             }}>
               {others.map((s, i) => {
-                const tones = t.palette;
-                const tone = tones[i % tones.length];
+                const tone = t.palette[i % t.palette.length];
                 const ini = (s.author || '?').split(/\s+/).map(c => c[0]).slice(0, 2).join('').toUpperCase();
                 return (
-                  <button key={s.id} onClick={() => onOpenStory(s.id)} style={{
-                    flex: '0 0 auto', width: 220, marginLeft: i === 0 ? 22 : 0,
-                    background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radiusSm,
-                    padding: '14px 14px', textAlign: 'left', cursor: 'pointer',
-                    display: 'flex', flexDirection: 'column', gap: 10, minHeight: 132,
-                    position: 'relative', overflow: 'hidden',
-                  }}>
-                    <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: tone }} />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{
-                        width: 26, height: 26, borderRadius: 13, background: `${tone}22`, color: tone,
-                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        font: `600 11px ${t.fontUi}`, letterSpacing: 0.4,
-                      }}>{ini}</span>
-                      <span style={{ font: `italic 13px ${t.fontBody}`, color: t.inkSoft }}>{s.author}</span>
-                    </div>
-                    <div style={{ font: `500 15px/1.2 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.2 }}>
-                      {s.title}
-                    </div>
-                    <div style={{ marginTop: 'auto', font: `11px ${t.fontUi}`, color: t.inkMute, letterSpacing: 0.3 }}>
-                      {s.readMinutes} min · {s.publishedRel}
-                    </div>
-                  </button>
+                  <div key={s.id} style={{ flexShrink: 0, width: 220, marginLeft: i === 0 ? 22 : 0 }}>
+                    <button onClick={() => onOpenStory(s.id)} style={{
+                      width: '100%', height: '100%', minHeight: 132,
+                      background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radiusSm,
+                      padding: '14px 14px', textAlign: 'left', cursor: 'pointer',
+                      display: 'flex', flexDirection: 'column', gap: 10,
+                      position: 'relative', overflow: 'hidden',
+                    }}>
+                      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: tone }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{
+                          width: 26, height: 26, borderRadius: 13, background: `${tone}22`, color: tone,
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          font: `600 11px ${t.fontUi}`, letterSpacing: 0.4,
+                        }}>{ini}</span>
+                        <span style={{ font: `italic 13px ${t.fontBody}`, color: t.inkSoft }}>{s.author}</span>
+                      </div>
+                      <div style={{ font: `500 15px/1.2 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.2 }}>
+                        {s.title}
+                      </div>
+                      <div style={{ marginTop: 'auto', font: `11px ${t.fontUi}`, color: t.inkMute, letterSpacing: 0.3 }}>
+                        {s.readMinutes} min · {s.publishedRel}
+                      </div>
+                    </button>
+                  </div>
                 );
               })}
-              <div style={{ flexShrink: 0, width: 12 }} />
+              <div style={{ flexShrink: 0, width: 22 }} />
             </div>
           </>
         );

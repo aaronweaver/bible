@@ -81,10 +81,11 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
   // Immersive mode: hide tabs when scrolling through middle of chapter.
   // Uses a ref so immersive is sticky — only clears at top/bottom, never mid-scroll-up.
   const immersiveRef = useRef(false);
+  const transitioningRef = useRef(false);
   useEffect(() => {
     let lastY = window.scrollY;
     const onScroll = () => {
-      if (programmaticScroll.current) return;
+      if (programmaticScroll.current || transitioningRef.current) return;
       const y = window.scrollY;
       const atTop = y < 60;
       const atBottom = y + window.innerHeight >= document.documentElement.scrollHeight - 80;
@@ -102,6 +103,8 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
       }
       if (next !== immersiveRef.current) {
         immersiveRef.current = next;
+        transitioningRef.current = true;
+        setTimeout(() => { transitioningRef.current = false; }, 400);
         setImmersive(next);
         setUiState({ immersive: next });
       }

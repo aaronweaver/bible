@@ -28,6 +28,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
   const [book, setBook] = useState(initial.book);
   const [chapter, setChapter] = useState(initial.chapter);
   const verseRefs = useRef<Record<number, HTMLSpanElement | null>>({});
+  const programmaticScroll = useRef(false);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [targetVerse, setTargetVerse] = useState<number | null>(null);
@@ -66,9 +67,13 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
     if (!v || verseCount === 0) return;
     const el = verseRefs.current[v];
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      programmaticScroll.current = true;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setFlashVerse(v);
-      setTimeout(() => setFlashVerse(null), 1000);
+      setTimeout(() => {
+        setFlashVerse(null);
+        programmaticScroll.current = false;
+      }, 1200);
       setTargetVerse(null);
     }
   }, [verseCount, targetVerse, nav?.verse, nav?.startVerse]);
@@ -79,6 +84,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
   useEffect(() => {
     let lastY = window.scrollY;
     const onScroll = () => {
+      if (programmaticScroll.current) return;
       const y = window.scrollY;
       const atTop = y < 60;
       const atBottom = y + window.innerHeight >= document.documentElement.scrollHeight - 80;
@@ -86,10 +92,12 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
       if (atTop || atBottom) {
         next = false;
       } else if (y > lastY + 2) {
-        // Scrolling down past a small dead-zone → go immersive
+        // Scrolling down → go immersive
         next = true;
+      } else if (y < lastY - 2) {
+        // Scrolling up → reveal menu
+        next = false;
       } else {
-        // Scrolling up in the middle — stay in current state (no toggle back)
         next = immersiveRef.current;
       }
       if (next !== immersiveRef.current) {

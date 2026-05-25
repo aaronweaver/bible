@@ -26,9 +26,9 @@ export function BottomNav({ t, accent }: { t: Theme; accent: { c: string; on: st
 
   const TABS = [
     { id: 'today',   label: 'Home',    icon: 'home',    path: '/' },
-    { id: 'bible',   label: 'Bible',   icon: 'book',    path: '/bible' },
-    { id: 'lessons', label: 'Lessons', icon: 'lessons', path: '/lessons' },
-    { id: 'study',   label: 'Study',   icon: 'bookmark', path: `/lessons/${curLessonId}` },
+    { id: 'bible',   label: 'Bible Content', icon: 'book',    path: '/bible' },
+    { id: 'lessons', label: 'Bible Content', icon: 'lessons', path: '/lessons' },
+    { id: 'study',   label: 'My Content',   icon: 'bookmark', path: `/lessons/${curLessonId}` },
     { id: 'profile', label: 'Profile', icon: 'profile', path: '/profile' },
   ];
 

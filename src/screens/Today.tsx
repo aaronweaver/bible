@@ -355,7 +355,6 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
         marginTop: 12,
         display: 'flex', gap: 10, overflowX: 'auto',
         padding: '4px 0',
-        scrollSnapType: 'x mandatory',
       }}>
         {STORIES.slice(1).map((s, i) => (
           <MiniStoryCard key={s.id} t={t} story={s}
@@ -364,7 +363,7 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
             onOpen={() => navigate(`/stories/${s.id}`)} />
         ))}
         <div style={{
-          flex: '0 0 auto', width: 168, scrollSnapAlign: 'start',
+          flex: '0 0 auto', width: 168,
           border: `1.5px dashed ${t.paperEdge}`, borderRadius: t.radiusSm,
           padding: '14px 12px', display: 'flex', flexDirection: 'column',
           alignItems: 'flex-start', justifyContent: 'space-between',
@@ -503,7 +502,7 @@ function MiniStoryCard({ t, story, tone, onOpen, ml = 0 }: {
   const initials = (story.author || '?').split(/\s+/).map(s => s[0]).slice(0, 2).join('').toUpperCase();
   return (
     <button onClick={onOpen} style={{
-      flex: '0 0 auto', width: 220, scrollSnapAlign: 'start', marginLeft: ml,
+      flex: '0 0 auto', width: 220, marginLeft: ml,
       background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radiusSm,
       padding: '14px 14px', textAlign: 'left', cursor: 'pointer',
       display: 'flex', flexDirection: 'column', gap: 10, minHeight: 132,

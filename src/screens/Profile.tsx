@@ -95,7 +95,6 @@ export function Profile({ t, accent }: { t: Theme; accent: { c: string; on: stri
         borderRadius: 14, overflow: 'hidden',
       }}>
         {[
-          { label: 'Reading plan', value: 'New Believers', onPress: undefined as (() => void) | undefined },
           { label: 'Theme', value: dark ? 'Dark' : 'Light', onPress: toggleDark },
           { label: 'About Cornerstone', value: 'v0.1', onPress: undefined },
         ].map((row, i, arr) => (

@@ -113,7 +113,7 @@ function StoryScreen({
               padding: '5px 10px 5px 8px', borderRadius: 999,
               font: `600 10.5px ${t.fontUi}`, letterSpacing: 1, textTransform: 'uppercase' as const,
             }}>
-              <Icon name="sparkles" size={12} filled color="#fff" /> Testimony
+              <Icon name="sparkles" size={12} filled color="#fff" /> My Story
             </div>
           </div>
         </div>

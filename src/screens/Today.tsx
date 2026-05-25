@@ -346,7 +346,7 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
 
       {/* My Stories */}
       <div style={{ padding: '24px 22px 10px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-        <div style={{ font: `12px ${t.fontUi}`, letterSpacing: 1.5, textTransform: 'uppercase', color: t.inkMute, fontWeight: 600 }}>My Stories</div>
+        <div style={{ font: `12px ${t.fontUi}`, letterSpacing: 1.5, textTransform: 'uppercase', color: t.inkMute, fontWeight: 600 }}>Stories</div>
         <div style={{ font: `12px ${t.fontUi}`, color: t.inkMute, letterSpacing: 0.3 }}>{STORIES.length} testimonies</div>
       </div>
       <FeaturedStoryCard t={t} accent={accent} story={STORIES[0]} palette={palette}
@@ -447,7 +447,7 @@ function FeaturedStoryCard({ t, accent, story, palette, onOpen }: {
             font: `600 11px ${t.fontUi}`, letterSpacing: 0.6, textTransform: 'uppercase' as const,
             backdropFilter: 'blur(8px)',
           }}>
-            <Icon name="sparkles" size={12} filled color="#1a1a1a" /> Featured testimony
+            <Icon name="sparkles" size={12} filled color="#1a1a1a" /> Featured Story
           </div>
           <div style={{ position: 'absolute', left: 16, right: 16, bottom: 14, color: '#fff' }}>
             <div style={{ font: `500 22px/1.15 ${t.fontDisplay}`, letterSpacing: -0.3 }}>
@@ -475,7 +475,7 @@ function FeaturedStoryCard({ t, accent, story, palette, onOpen }: {
             padding: '5px 10px 5px 8px', borderRadius: 999,
             font: `600 11px ${t.fontUi}`, letterSpacing: 0.6, textTransform: 'uppercase' as const,
           }}>
-            <Icon name="sparkles" size={12} filled color={accent.c} /> Featured testimony
+            <Icon name="sparkles" size={12} filled color={accent.c} /> Featured Story
           </div>
           <div style={{ font: `500 22px/1.2 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.3, marginTop: 12 }}>
             {story.title}

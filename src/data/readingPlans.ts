@@ -29,7 +29,37 @@ export type ReadingPlanProgress = {
   status: ReadingPlanStatus;
   currentDay: number;
   completedDays: number[];
+  completedReadings?: Record<number, number[]>;
+  /** ISO date (YYYY-MM-DD) when the user started this plan. */
+  startDate?: string;
 };
+
+export function todayISO(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+export function dateForPlanDay(startDate: string | undefined, dayNum: number): Date | null {
+  if (!startDate) return null;
+  const [y, m, d] = startDate.split('-').map(Number);
+  if (!y || !m || !d) return null;
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + (dayNum - 1));
+  return dt;
+}
+
+export function daysBetween(startISO: string, todayISOStr: string): number {
+  const a = new Date(startISO + 'T00:00:00');
+  const b = new Date(todayISOStr + 'T00:00:00');
+  return Math.round((b.getTime() - a.getTime()) / 86400000);
+}
+
+export function formatPlanDate(dt: Date): string {
+  return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
 
 export const READING_PLANS_META: ReadingPlanMeta[] = rawMeta as ReadingPlanMeta[];
 

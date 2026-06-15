@@ -15,7 +15,7 @@ export const DEVOTIONAL_SERIES = {
   title: 'Morning and Evening',
   author: 'Charles H. Spurgeon',
   description:
-    'A year of daily devotions from the Prince of Preachers — one reading for morning, one for evening, for every day of the year.',
+    'A year of daily devotions from C. H. Spurgeon — one reading for morning, one for evening, for every day of the year.',
   totalDays: 366,
   accentIndex: 1,
 } as const;

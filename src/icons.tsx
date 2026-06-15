@@ -123,6 +123,19 @@ export function Icon({ name, size = 22, color = 'currentColor', filled = false, 
           <path d="M7 4l13 8-13 8z" {...p} fill={filled ? color : 'none'} />
         </svg>
       );
+    case 'pause':
+      return (
+        <svg style={s} viewBox="0 0 24 24">
+          <rect x="6" y="4" width="4" height="16" rx="1" fill={color} />
+          <rect x="14" y="4" width="4" height="16" rx="1" fill={color} />
+        </svg>
+      );
+    case 'close':
+      return (
+        <svg style={s} viewBox="0 0 24 24">
+          <path d="M6 6l12 12M18 6L6 18" {...p} />
+        </svg>
+      );
     case 'moon':
       return (
         <svg style={s} viewBox="0 0 24 24">
@@ -143,6 +156,13 @@ export function Icon({ name, size = 22, color = 'currentColor', filled = false, 
           <circle cx="18" cy="19" r="3" fill={color} />
           <line x1="8.6" y1="10.5" x2="15.4" y2="6.5" stroke={color} strokeWidth={stroke} strokeLinecap="round" />
           <line x1="8.6" y1="13.5" x2="15.4" y2="17.5" stroke={color} strokeWidth={stroke} strokeLinecap="round" />
+        </svg>
+      );
+    case 'copy':
+      return (
+        <svg style={s} viewBox="0 0 24 24">
+          <rect x="9" y="9" width="11" height="11" rx="2" {...p} fill="none" />
+          <path d="M5 15V6a2 2 0 012-2h9" {...p} fill="none" />
         </svg>
       );
     default:

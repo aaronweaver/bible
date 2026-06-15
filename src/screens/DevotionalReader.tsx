@@ -87,9 +87,31 @@ export function DevotionalReader({ t }: { t: Theme }) {
 
   const bodyParagraphs = entry.body.split('\n\n').filter(p => p.trim().length > 0);
 
+  const onShare = () => {
+    const url = `https://aaronweaver.github.io/bible/devotional/${date}/${safePeriod}`;
+    const shareText = `${eyebrow} — ${dateLabel}`;
+    if (navigator.share) {
+      navigator.share({ title: shareText, text: shareText, url });
+    } else {
+      navigator.clipboard?.writeText(url);
+    }
+  };
+
   return (
     <div ref={scrollRef} style={{ padding: '0 0 40px' }}>
-      <TopBar t={t} onBack={() => navigate(-1)} />
+      <TopBar t={t} onBack={() => navigate(-1)} right={
+        <button onClick={onShare} aria-label="Share devotional" style={{
+          height: 36, borderRadius: 18, border: 'none',
+          background: devColor, color: '#fff', cursor: 'pointer',
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: '0 14px 0 11px',
+          font: `600 13px ${t.fontUi}`,
+          boxShadow: `0 6px 16px -8px ${devColor}`,
+        }}>
+          <Icon name="share" size={14} color="#fff" />
+          Share
+        </button>
+      } />
 
       {/* Header */}
       <div style={{ padding: '4px 22px 20px' }}>

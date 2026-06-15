@@ -10,8 +10,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
 }
-*, *::before, *::after { box-sizing: border-box; }
-button { font-family: inherit; -webkit-tap-highlight-color: transparent; }
+*, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+button { font-family: inherit; }
 textarea { font-family: inherit; }
 ::-webkit-scrollbar { width: 0; height: 0; }
 @supports (padding: max(0px)) {

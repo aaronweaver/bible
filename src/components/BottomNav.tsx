@@ -3,15 +3,16 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import type { Theme } from '../theme';
 import { Icon } from '../icons';
 import { LESSONS } from '../data/lessons';
-import { useAppState } from '../hooks/useAppState';
+import { useAppState, HIGHLIGHT_COLORS, type HighlightColor } from '../hooks/useAppState';
 import { useUiState } from '../hooks/useUiState';
+import { SermonPlayerRow } from './SermonPlayer';
 
 export function BottomNav({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { state } = useAppState();
   const isDark = t.statusDark;
-  const { immersive, bibleNav } = useUiState();
+  const { immersive, bibleNav, activeSermon, verseSelection } = useUiState();
 
   const curLessonId = LESSONS.find((l) => !state.progress[l.id]?.completed)?.id ?? LESSONS[0].id;
 
@@ -25,11 +26,11 @@ export function BottomNav({ t, accent }: { t: Theme; accent: { c: string; on: st
   })();
 
   const TABS = [
-    { id: 'today',   label: 'Home',    icon: 'home',    path: '/' },
-    { id: 'bible',   label: 'Bible Content', icon: 'book',    path: '/bible' },
-    { id: 'lessons', label: 'Bible Content', icon: 'lessons', path: '/lessons' },
-    { id: 'study',   label: 'My Content',   icon: 'bookmark', path: `/lessons/${curLessonId}` },
-    { id: 'profile', label: 'Profile', icon: 'profile', path: '/profile' },
+    { id: 'today',   label: 'Home',            icon: 'home',    path: '/' },
+    { id: 'bible',   label: 'Bible',           icon: 'book',    path: '/bible' },
+    { id: 'lessons', label: 'Bible Content',   icon: 'lessons', path: '/lessons' },
+    { id: 'study',   label: 'My Content',      icon: 'bookmark', path: `/lessons/${curLessonId}` },
+    { id: 'profile', label: 'Profile',         icon: 'profile', path: '/profile' },
   ];
 
   const pillBg = isDark ? 'rgba(22,22,27,0.85)' : 'rgba(255,255,255,0.92)';
@@ -64,18 +65,103 @@ export function BottomNav({ t, accent }: { t: Theme; accent: { c: string; on: st
           ? '0 -8px 30px -10px rgba(0,0,0,0.5)'
           : '0 -8px 30px -10px rgba(0,0,0,0.1)',
       }}>
-        {/* Chapter bar row */}
-        {bibleNav && (
+        {/* Sermon player row — sits flush on top of nav */}
+        {activeSermon && (
+          <SermonPlayerRow t={t} accent={accent} sermon={activeSermon} divider={divider} />
+        )}
+
+        {/* Chapter bar row — or highlight row when verses selected */}
+        {bibleNav && verseSelection && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 52, padding: '0 12px' }}>
+              {(['yellow','green','blue','pink'] as HighlightColor[]).map(c => {
+                const active = verseSelection.currentColor === c;
+                return (
+                  <button
+                    key={c}
+                    aria-label={active ? `Remove ${c} highlight` : `Highlight ${c}`}
+                    onClick={() => verseSelection.onPickColor(active ? null : c)}
+                    style={{
+                      width: 30, height: 30, borderRadius: 15,
+                      background: HIGHLIGHT_COLORS[c],
+                      border: active ? `2px solid ${t.ink}` : '0.5px solid rgba(0,0,0,0.1)',
+                      cursor: 'pointer', padding: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    {active && <Icon name="close" size={14} color={t.ink} stroke={2.4} />}
+                  </button>
+                );
+              })}
+              <div style={{ width: 1, height: 22, background: divider }} />
+              <button
+                aria-label="Copy verse"
+                onClick={() => {
+                  const txt = `${verseSelection.reference} — ${verseSelection.combinedText}`;
+                  navigator.clipboard?.writeText(txt);
+                }}
+                style={{
+                  width: 30, height: 30, borderRadius: 15,
+                  background: 'transparent', border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', padding: 0, color: t.ink,
+                }}
+              >
+                <Icon name="copy" size={15} color={t.ink} />
+              </button>
+              <button
+                aria-label="Share verse"
+                onClick={() => {
+                  const { reference, combinedText, shareUrl } = verseSelection;
+                  if (navigator.share) {
+                    navigator.share({ title: reference, text: `${reference} — ${combinedText}`, url: shareUrl })
+                      .catch(() => {});
+                  } else {
+                    navigator.clipboard?.writeText(shareUrl);
+                  }
+                }}
+                style={{
+                  width: 30, height: 30, borderRadius: 15,
+                  background: 'transparent', border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', padding: 0, color: t.ink,
+                }}
+              >
+                <Icon name="share" size={15} color={t.ink} />
+              </button>
+              <div style={{ width: 1, height: 22, background: divider }} />
+              <div style={{
+                font: `600 12px ${t.fontUi}`, color: t.inkSoft,
+                minWidth: 22, textAlign: 'center',
+              }}>+{verseSelection.count}</div>
+              <button
+                aria-label="Close selection"
+                onClick={verseSelection.onClose}
+                style={{
+                  width: 30, height: 30, borderRadius: 15,
+                  background: 'transparent', border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', padding: 0,
+                  color: t.inkSoft,
+                }}
+              >
+                <Icon name="close" size={15} color={t.inkSoft} />
+              </button>
+            </div>
+            <div style={{ height: 0.5, background: divider, margin: '0 14px' }} />
+          </>
+        )}
+        {bibleNav && !verseSelection && (
           <>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <button
                 onClick={bibleNav.onPrev}
-                disabled={bibleNav.chapter <= 1}
+                disabled={!bibleNav.canPrev}
                 style={{
                   width: 56, height: 52, flexShrink: 0,
                   background: 'none', border: 'none',
-                  cursor: bibleNav.chapter <= 1 ? 'default' : 'pointer',
-                  opacity: bibleNav.chapter <= 1 ? 0.3 : 1,
+                  cursor: !bibleNav.canPrev ? 'default' : 'pointer',
+                  opacity: !bibleNav.canPrev ? 0.3 : 1,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
@@ -94,12 +180,12 @@ export function BottomNav({ t, accent }: { t: Theme; accent: { c: string; on: st
               </button>
               <button
                 onClick={bibleNav.onNext}
-                disabled={bibleNav.chapter >= bibleNav.maxChapter}
+                disabled={!bibleNav.canNext}
                 style={{
                   width: 56, height: 52, flexShrink: 0,
                   background: 'none', border: 'none',
-                  cursor: bibleNav.chapter >= bibleNav.maxChapter ? 'default' : 'pointer',
-                  opacity: bibleNav.chapter >= bibleNav.maxChapter ? 0.3 : 1,
+                  cursor: !bibleNav.canNext ? 'default' : 'pointer',
+                  opacity: !bibleNav.canNext ? 0.3 : 1,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >

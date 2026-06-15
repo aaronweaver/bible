@@ -14,7 +14,7 @@ type Tab = 'mine' | 'find' | 'completed';
 
 export function Lessons({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
   const navigate = useNavigate();
-  const { state, addDevotional, addPlan, removePlan, removeLessonProgress, removeDevotional } = useAppState();
+  const { state, addDevotional, addPlan, addCourse, removePlan, removeLessonProgress, removeDevotional } = useAppState();
   const { dark, toggleDark } = useTheme();
   const [tab, setTab] = React.useState<Tab>('mine');
   const [expanded, setExpanded] = React.useState(() => {
@@ -24,14 +24,14 @@ export function Lessons({ t, accent }: { t: Theme; accent: { c: string; on: stri
   const totalMinutes = LESSONS.reduce((s, l) => s + l.minutes, 0);
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'mine', label: 'My Lessons' },
+    { id: 'mine', label: 'My Content' },
     { id: 'find', label: 'Find' },
     { id: 'completed', label: 'Completed' },
   ];
 
   return (
     <div style={{ paddingBottom: 24 }}>
-      <TopBar t={t} title="Lessons"
+      <TopBar t={t} title="Bible Content"
         right={<DarkToggle t={t} darkMode={dark} onToggle={toggleDark} />} />
 
       {/* Pill tabs */}
@@ -76,6 +76,7 @@ export function Lessons({ t, accent }: { t: Theme; accent: { c: string; on: stri
         <FindTab t={t} accent={accent} state={state}
           onAddDevotional={() => { addDevotional(); setTab('mine'); }}
           onAddPlan={(id) => { addPlan(id); setTab('mine'); }}
+          onAddCourse={() => { addCourse(); setTab('mine'); }}
           navigate={navigate}
         />
       )}
@@ -99,8 +100,9 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
 
   return (
     <div style={{ padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* Course card — condensed, expandable */}
-      <button onClick={onToggle} style={{
+      {/* Course card — condensed, expandable. Only shown once the course is added. */}
+      {state.lessonsAdded && (<>
+      <div role="button" tabIndex={0} onClick={onToggle} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); } }} style={{
         width: '100%', textAlign: 'left',
         display: 'flex', alignItems: 'center', gap: 14,
         padding: '16px 18px',
@@ -155,7 +157,7 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
             <Icon name="chev-d" size={18} />
           </div>
         </div>
-      </button>
+      </div>
 
       {/* Expanded lesson list */}
       {expanded && (
@@ -181,11 +183,14 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
           })}
         </div>
       )}
+      </>)}
 
       {/* Devotional series row */}
       {devAdded && (
-        <button
+        <div
+          role="button" tabIndex={0}
           onClick={() => navigate(`/devotional/${todayDateKey()}/morning`)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/devotional/${todayDateKey()}/morning`); } }}
           style={{
             width: '100%', textAlign: 'left',
             display: 'flex', alignItems: 'center', gap: 14,
@@ -236,7 +241,7 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
             </button>
             <Icon name="chev-r" size={16} color={t.inkMute} />
           </div>
-        </button>
+        </div>
       )}
 
       {/* Reading plan rows */}
@@ -246,8 +251,10 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
         const pct = planProgressPct(prog, m.totalDays);
         return (
           <div key={m.id} style={{ position: 'relative' }}>
-            <button
+            <div
+              role="button" tabIndex={0}
               onClick={() => navigate(`/plan/${m.id}/day/${prog.currentDay}`)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/plan/${m.id}/day/${prog.currentDay}`); } }}
               style={{
                 width: '100%', textAlign: 'left',
                 display: 'flex', alignItems: 'center', gap: 14,
@@ -293,7 +300,7 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
               >
                 ···
               </button>
-            </button>
+            </div>
           </div>
         );
       })}
@@ -366,15 +373,54 @@ function MineLessons({ t, accent, completedCount, totalMinutes, expanded, onTogg
   );
 }
 
-function FindTab({ t, accent, state, onAddDevotional, onAddPlan, navigate }: {
+function FindTab({ t, accent, state, onAddDevotional, onAddPlan, onAddCourse, navigate }: {
   t: Theme; accent: { c: string; on: string }; state: any;
-  onAddDevotional: () => void; onAddPlan: (id: string) => void; navigate: (path: string) => void;
+  onAddDevotional: () => void; onAddPlan: (id: string) => void; onAddCourse: () => void;
+  navigate: (path: string) => void;
 }) {
   const devColor = t.palette[DEVOTIONAL_SERIES.accentIndex];
   const isAdded = state.devotional.status !== 'not-added';
+  const courseAdded = !!state.lessonsAdded;
+  const courseColor = accent.c;
+  const courseMinutes = LESSONS.reduce((s, l) => s + l.minutes, 0);
 
   return (
     <div style={{ padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* New Believers Foundation discovery card */}
+      <div style={{
+        background: t.paper, border: `0.5px solid ${t.paperEdge}`,
+        borderRadius: t.radius, overflow: 'hidden',
+      }}>
+        <div style={{ height: 4, background: courseColor }} />
+        <div style={{ padding: '18px 18px 20px' }}>
+          <div style={{
+            font: `700 11px ${t.fontUi}`, letterSpacing: 1.4, textTransform: 'uppercase',
+            color: courseColor, marginBottom: 8,
+          }}>
+            Foundation Course · 10 lessons
+          </div>
+          <div style={{ font: `500 24px/1.1 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.3 }}>
+            New Believers Foundation
+          </div>
+          <div style={{ font: `14px/1.55 ${t.fontBody}`, color: t.inkSoft, marginTop: 8 }}>
+            A 10-step path through the basics of the Christian faith — about {courseMinutes} minutes total.
+          </div>
+          <button
+            onClick={courseAdded ? () => navigate('/lessons') : onAddCourse}
+            style={{
+              marginTop: 16, width: '100%',
+              background: courseAdded ? 'transparent' : courseColor,
+              color: courseAdded ? courseColor : accent.on,
+              border: courseAdded ? `1.5px solid ${courseColor}` : 'none',
+              borderRadius: 12, padding: '13px',
+              font: `600 15px ${t.fontUi}`, cursor: 'pointer', letterSpacing: -0.1,
+            }}
+          >
+            {courseAdded ? 'Added · Open' : 'Add to My Content'}
+          </button>
+        </div>
+      </div>
+
       {/* Morning & Evening discovery card */}
       <div style={{
         background: t.paper, border: `0.5px solid ${t.paperEdge}`,
@@ -417,7 +463,7 @@ function FindTab({ t, accent, state, onAddDevotional, onAddPlan, navigate }: {
           >
             {isAdded
               ? `Open Today's Devotional — ${formatDevotionalDate(todayDateKey())}`
-              : 'Add to My Lessons'}
+              : 'Add to My Content'}
           </button>
         </div>
       </div>
@@ -665,7 +711,12 @@ function LessonRow({ t, tone, lesson, idx, isLast, state, sectionsDone, onOpen }
         {!isLast && <div style={{ width: 1.5, flex: 1, background: isDone ? tone : t.rule, marginTop: 2 }} />}
       </div>
 
-      <button onClick={isLocked ? undefined : onOpen} disabled={isLocked} style={{
+      <div
+        role="button" tabIndex={isLocked ? -1 : 0}
+        aria-disabled={isLocked}
+        onClick={isLocked ? undefined : onOpen}
+        onKeyDown={(e) => { if (!isLocked && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onOpen(); } }}
+        style={{
         flex: 1, textAlign: 'left', margin: '0 0 14px',
         background: 'transparent', border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radiusSm,
         padding: '14px 16px', cursor: isLocked ? 'default' : 'pointer',
@@ -711,7 +762,7 @@ function LessonRow({ t, tone, lesson, idx, isLast, state, sectionsDone, onOpen }
             <Icon name="share" size={16} color={tone} stroke={1.8} />
           </button>
         </div>
-      </button>
+      </div>
     </div>
   );
 }

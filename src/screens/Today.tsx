@@ -88,7 +88,8 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
         </div>
       </div>
 
-      {/* Continue lesson */}
+      {/* Continue lesson — only once the course has been added */}
+      {state.lessonsAdded && (<>
       <SectionHeader t={t} title="Continue your study" />
       <button onClick={() => navigate(`/lessons/${curLesson.id}`)} style={{
         display: 'block', width: 'calc(100% - 36px)', margin: '0 18px',
@@ -128,6 +129,7 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
           {curSectionsDone} of {curLesson.sections.length} sections · ~{curLesson.minutes} min
         </div>
       </button>
+      </>)}
 
       {/* Share buttons */}
       <div style={{ margin: '12px 18px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -154,24 +156,28 @@ export function Today({ t, accent }: { t: Theme; accent: { c: string; on: string
         </button>
       </div>
 
-      {/* Course progress */}
-      <SectionHeader t={t} title="Course progress" />
-      <div onClick={() => navigate('/lessons')} style={{
-        margin: '0 18px', padding: '16px 18px',
-        background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
-        display: 'flex', gap: 16, alignItems: 'center', cursor: 'pointer',
-      }}>
-        <ProgressRing pct={pct} accent={accent.c} t={t} />
-        <div style={{ flex: 1 }}>
-          <div style={{ font: `500 22px/1.1 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.3 }}>
-            {completedCount} of 10 lessons
+      {/* Course progress — only once the course has been added */}
+      {state.lessonsAdded && (
+        <>
+          <SectionHeader t={t} title="Course progress" />
+          <div onClick={() => navigate('/lessons')} style={{
+            margin: '0 18px', padding: '16px 18px',
+            background: t.paper, border: `0.5px solid ${t.paperEdge}`, borderRadius: t.radius,
+            display: 'flex', gap: 16, alignItems: 'center', cursor: 'pointer',
+          }}>
+            <ProgressRing pct={pct} accent={accent.c} t={t} />
+            <div style={{ flex: 1 }}>
+              <div style={{ font: `500 22px/1.1 ${t.fontDisplay}`, color: t.ink, letterSpacing: -0.3 }}>
+                {completedCount} of 10 lessons
+              </div>
+              <div style={{ font: `13px ${t.fontBody}`, color: t.inkSoft, marginTop: 2 }}>
+                New Believers Foundation Course
+              </div>
+            </div>
+            <Icon name="chev-r" size={18} color={t.inkMute} />
           </div>
-          <div style={{ font: `13px ${t.fontBody}`, color: t.inkSoft, marginTop: 2 }}>
-            New Believers Foundation Course
-          </div>
-        </div>
-        <Icon name="chev-r" size={18} color={t.inkMute} />
-      </div>
+        </>
+      )}
 
       {/* Today's devotional card */}
       {devAdded && (

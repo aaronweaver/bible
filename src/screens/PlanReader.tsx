@@ -5,6 +5,7 @@ import { TopBar } from '../components/TopBar';
 import { Icon } from '../icons';
 import {
   READING_PLANS_META, getPlanDays, readingsLabel,
+  dateForPlanDay, formatPlanDate, daysBetween, todayISO,
   type ReadingDay,
 } from '../data/readingPlans';
 import { useAppState } from '../hooks/useAppState';
@@ -13,7 +14,7 @@ import { PlanCompletionSheet } from '../components/PlanCompletionSheet';
 export function PlanReader({ t }: { t: Theme }) {
   const { planId = '', day: dayParam = '1' } = useParams<{ planId: string; day: string }>();
   const navigate = useNavigate();
-  const { state, markPlanDayComplete } = useAppState();
+  const { state, markPlanDayComplete, togglePlanReading, shiftPlanDatesToToday } = useAppState();
 
   const meta = READING_PLANS_META.find(m => m.id === planId);
   const [days, setDays] = useState<ReadingDay[] | null>(null);
@@ -35,15 +36,37 @@ export function PlanReader({ t }: { t: Theme }) {
 
   const accentColor = t.palette[meta.accentIndex];
   const prog = state.readingPlans[planId];
-  const isRead = prog?.completedDays?.includes(dayNum) ?? false;
+  const dayMarkedComplete = prog?.completedDays?.includes(dayNum) ?? false;
   const todayData = days?.find(d => d.day === dayNum);
+  const storedIdxs = prog?.completedReadings?.[dayNum];
+  const completedIdxs = storedIdxs ?? (dayMarkedComplete && todayData
+    ? todayData.readings.map((_, i) => i)
+    : []);
+  const isRead = todayData
+    ? completedIdxs.length >= todayData.readings.length
+    : dayMarkedComplete;
+
+  // Catch-up: how many days behind is the user vs. the scheduled date?
+  const startDate = prog?.startDate;
+  const scheduledDay = startDate
+    ? Math.min(totalDays, Math.max(1, daysBetween(startDate, todayISO()) + 1))
+    : null;
+  const nextIncomplete = prog
+    ? (() => {
+        for (let d = 1; d <= totalDays; d++) {
+          if (!prog.completedDays.includes(d)) return d;
+        }
+        return totalDays + 1;
+      })()
+    : 1;
+  const daysBehind = scheduledDay != null ? Math.max(0, scheduledDay - nextIncomplete) : 0;
 
   function goToDay(d: number) {
     navigate(`/plan/${planId}/day/${d}`, { replace: true });
   }
 
   function handleMarkComplete() {
-    markPlanDayComplete(planId, dayNum, totalDays);
+    markPlanDayComplete(planId, dayNum, totalDays, todayData?.readings.length);
     setShowComplete(true);
   }
 
@@ -86,8 +109,41 @@ export function PlanReader({ t }: { t: Theme }) {
         t={t} accentColor={accentColor}
         totalDays={totalDays} currentDay={dayNum}
         completedDays={prog?.completedDays ?? []}
+        startDate={startDate}
+        scheduledDay={scheduledDay}
         onSelect={goToDay}
       />
+
+      {daysBehind > 0 && (
+        <div style={{
+          margin: '0 18px 12px',
+          padding: '12px 14px',
+          display: 'flex', alignItems: 'center', gap: 12,
+          background: `${accentColor}10`,
+          border: `1px solid ${accentColor}33`,
+          borderRadius: 12,
+        }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ font: `600 13px ${t.fontUi}`, color: accentColor }}>
+              You're {daysBehind} day{daysBehind === 1 ? '' : 's'} behind
+            </div>
+            <div style={{ font: `12px ${t.fontBody}`, color: t.inkSoft, marginTop: 2 }}>
+              Catch up by shifting dates to start today.
+            </div>
+          </div>
+          <button
+            onClick={() => shiftPlanDatesToToday(planId)}
+            style={{
+              background: accentColor, color: '#fff', border: 'none',
+              borderRadius: 999, padding: '8px 14px',
+              font: `600 13px ${t.fontUi}`, cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Catch up
+          </button>
+        </div>
+      )}
 
       {/* Readings list */}
       <div style={{ padding: '20px 18px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -98,58 +154,78 @@ export function PlanReader({ t }: { t: Theme }) {
           }}>
             Loading…
           </div>
-        ) : todayData ? todayData.readings.map((r, i) => (
-          <button
-            key={i}
-            onClick={() => navigate('/bible', {
-              state: {
-                book: r.book, chapter: r.chapter,
-                startVerse: r.startVerse,
-                endVerse: r.endVerse,
-                returnTo: `/plan/${planId}/day/${dayNum}`,
-                returnLabel: `Day ${dayNum}`,
-                lastReadingBook: todayData.readings[todayData.readings.length - 1].book,
-                lastReadingChapter: todayData.readings[todayData.readings.length - 1].chapter,
-                planId, planDay: dayNum, planTotalDays: totalDays,
-                planAccentIndex: meta.accentIndex, planTitle: meta.title,
-              },
-            })}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: t.paper, border: `0.5px solid ${t.paperEdge}`,
-              borderRadius: t.radius, padding: '15px 18px',
-              color: t.ink, cursor: 'pointer', textAlign: 'left',
-              boxShadow: '0 4px 16px -10px rgba(0,0,0,0.12)',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{
-                width: 38, height: 38, borderRadius: 19, flexShrink: 0,
-                border: `1.5px solid ${isRead ? accentColor : t.rule}`,
-                background: isRead ? `${accentColor}14` : 'transparent',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: isRead ? accentColor : t.inkMute,
-              }}>
-                {isRead
-                  ? <Icon name="check" size={16} stroke={2.2} color={accentColor} />
-                  : <div style={{ width: 10, height: 10, borderRadius: 5, background: t.rule }} />
-                }
-              </div>
-              <div>
-                <div style={{ font: `500 17px ${t.fontDisplay}`, letterSpacing: -0.2, color: t.ink }}>
-                  {r.book} {r.chapter}
-                  {r.startVerse ? `:${r.startVerse}–${r.endVerse}` : ''}
-                </div>
-                {r.startVerse && (
-                  <div style={{ font: `12px ${t.fontBody}`, color: t.inkMute, marginTop: 2 }}>
-                    Verses {r.startVerse}–{r.endVerse}
+        ) : todayData ? todayData.readings.map((r, i) => {
+          const readingDone = completedIdxs.includes(i);
+          const totalReadings = todayData.readings.length;
+          const goRead = () => navigate('/bible', {
+            state: {
+              book: r.book, chapter: r.chapter,
+              startVerse: r.startVerse,
+              endVerse: r.endVerse,
+              returnTo: `/plan/${planId}/day/${dayNum}`,
+              returnLabel: `Day ${dayNum}`,
+              lastReadingBook: todayData.readings[totalReadings - 1].book,
+              lastReadingChapter: todayData.readings[totalReadings - 1].chapter,
+              planId, planDay: dayNum, planTotalDays: totalDays,
+              planAccentIndex: meta.accentIndex, planTitle: meta.title,
+              planReadings: todayData.readings,
+              planReadingIdx: i,
+            },
+          });
+          return (
+            <div
+              key={i}
+              onClick={goRead}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                background: t.paper, border: `0.5px solid ${t.paperEdge}`,
+                borderRadius: t.radius, padding: '15px 18px',
+                color: t.ink, cursor: 'pointer', textAlign: 'left',
+                boxShadow: '0 4px 16px -10px rgba(0,0,0,0.12)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <button
+                  role="radio"
+                  aria-checked={readingDone}
+                  aria-label={`Mark ${r.book} ${r.chapter} complete`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePlanReading(planId, dayNum, i, totalReadings, totalDays);
+                  }}
+                  style={{
+                    width: 28, height: 28, borderRadius: 14, flexShrink: 0,
+                    border: `2px solid ${readingDone ? accentColor : t.rule}`,
+                    background: 'transparent', padding: 0, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  {readingDone && (
+                    <div style={{
+                      width: 14, height: 14, borderRadius: 7,
+                      background: accentColor,
+                    }} />
+                  )}
+                </button>
+                <div>
+                  <div style={{
+                    font: `500 17px ${t.fontDisplay}`, letterSpacing: -0.2,
+                    color: readingDone ? t.inkMute : t.ink,
+                  }}>
+                    {r.book} {r.chapter}
+                    {r.startVerse ? `:${r.startVerse}–${r.endVerse}` : ''}
                   </div>
-                )}
+                  {r.startVerse && (
+                    <div style={{ font: `12px ${t.fontBody}`, color: t.inkMute, marginTop: 2 }}>
+                      Verses {r.startVerse}–{r.endVerse}
+                    </div>
+                  )}
+                </div>
               </div>
+              <Icon name="chev-r" size={18} color={t.inkMute} />
             </div>
-            <Icon name="chev-r" size={18} color={t.inkMute} />
-          </button>
-        )) : (
+          );
+        }) : (
           <div style={{ color: t.inkMute, font: `14px ${t.fontBody}`, textAlign: 'center', padding: '40px 0' }}>
             No readings for day {dayNum}.
           </div>
@@ -174,6 +250,8 @@ export function PlanReader({ t }: { t: Theme }) {
                     lastReadingChapter: todayData.readings[todayData.readings.length - 1].chapter,
                     planId, planDay: dayNum, planTotalDays: totalDays,
                     planAccentIndex: meta.accentIndex, planTitle: meta.title,
+                    planReadings: todayData.readings,
+                    planReadingIdx: 0,
                   },
                 })}
                 style={{
@@ -240,9 +318,12 @@ export function PlanReader({ t }: { t: Theme }) {
   );
 }
 
-function DayStrip({ t, accentColor, totalDays, currentDay, completedDays, onSelect }: {
+function DayStrip({ t, accentColor, totalDays, currentDay, completedDays, startDate, scheduledDay, onSelect }: {
   t: Theme; accentColor: string; totalDays: number; currentDay: number;
-  completedDays: number[]; onSelect: (day: number) => void;
+  completedDays: number[];
+  startDate?: string;
+  scheduledDay: number | null;
+  onSelect: (day: number) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLButtonElement>(null);
@@ -269,6 +350,9 @@ function DayStrip({ t, accentColor, totalDays, currentDay, completedDays, onSele
       {Array.from({ length: totalDays }, (_, i) => i + 1).map(d => {
         const isActive = d === currentDay;
         const isDone = completedDays.includes(d);
+        const isToday = scheduledDay === d;
+        const dt = dateForPlanDay(startDate, d);
+        const dateLabel = dt ? formatPlanDate(dt) : 'Day';
         return (
           <button
             key={d}
@@ -276,26 +360,33 @@ function DayStrip({ t, accentColor, totalDays, currentDay, completedDays, onSele
             onClick={() => onSelect(d)}
             style={{
               flexShrink: 0,
-              width: 52, height: 60,
+              minWidth: 56, height: 64, padding: '0 8px',
               borderRadius: 12,
-              border: isActive ? 'none' : `1px solid ${isDone ? accentColor + '50' : t.rule}`,
+              border: isActive
+                ? 'none'
+                : `1px solid ${isToday ? accentColor : (isDone ? accentColor + '50' : t.rule)}`,
               background: isActive ? accentColor : isDone ? `${accentColor}12` : t.paper,
               cursor: 'pointer',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
             }}
           >
             <div style={{
-              font: `${isActive ? 700 : 500} 16px ${t.fontUi}`,
+              font: `${isActive ? 700 : 500} 15px ${t.fontUi}`,
               color: isActive ? '#fff' : isDone ? accentColor : t.ink,
+              display: 'inline-flex', alignItems: 'center', gap: 4,
             }}>
-              {isDone && !isActive ? '✓' : d}
+              {d}
+              {isDone && !isActive && (
+                <Icon name="check" size={11} stroke={2.4} color={accentColor} />
+              )}
             </div>
             <div style={{
               font: `500 10px ${t.fontUi}`,
-              color: isActive ? 'rgba(255,255,255,0.75)' : t.inkMute,
+              color: isActive ? 'rgba(255,255,255,0.85)' : t.inkMute,
               letterSpacing: 0.2,
+              whiteSpace: 'nowrap',
             }}>
-              Day
+              {dateLabel}
             </div>
           </button>
         );

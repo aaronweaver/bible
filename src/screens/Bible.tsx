@@ -4,12 +4,16 @@ import type { Theme } from '../theme';
 import { TopBar, CircleBtn, DarkToggle } from '../components/TopBar';
 import { Icon } from '../icons';
 import { BIBLE_BOOKS, getChapterBlocks, getVerseCount, formatBookTitle, isNumberedBook, type Block } from '../data/bible';
-import { useAppState, useTheme } from '../hooks/useAppState';
+import type { Reading } from '../data/readingPlans';
+import { useAppState, useTheme, HIGHLIGHT_COLORS, type HighlightColor } from '../hooks/useAppState';
 import { setUiState } from '../hooks/useUiState';
+import { useUiState } from '../hooks/useUiState';
 import { PlanCompletionSheet } from '../components/PlanCompletionSheet';
+import { SermonBadge } from '../components/SermonPlayer';
+import { getSermonsForChapter, SERMONS, type Sermon } from '../data/sermons';
 
 export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string } }) {
-  const { state, toggleHighlight, update, markPlanDayComplete } = useAppState();
+  const { state, setHighlight, update, markPlanDayComplete, togglePlanReading } = useAppState();
   const { dark, toggleDark } = useTheme();
   const fontScale = state.prefs.fontScale / 100;
   const location = useLocation();
@@ -22,9 +26,14 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
     lastReadingBook?: string; lastReadingChapter?: number;
     planId?: string; planDay?: number; planTotalDays?: number;
     planAccentIndex?: number; planTitle?: string;
+    planReadings?: Reading[]; planReadingIdx?: number;
   } | null;
 
-  const initial = nav?.book ? { book: nav.book, chapter: nav.chapter ?? 1 } : (state.lastRead ?? { book: 'John', chapter: 3 });
+  const sharedSermonId = new URLSearchParams(location.search).get('sermon');
+  const sharedSermon = sharedSermonId ? SERMONS.find((s) => s.id === sharedSermonId) : undefined;
+  const initial = sharedSermon
+    ? { book: sharedSermon.book, chapter: sharedSermon.chapter }
+    : nav?.book ? { book: nav.book, chapter: nav.chapter ?? 1 } : (state.lastRead ?? { book: 'John', chapter: 3 });
   const [book, setBook] = useState(initial.book);
   const [chapter, setChapter] = useState(initial.chapter);
   const verseRefs = useRef<Record<number, HTMLSpanElement | null>>({});
@@ -35,15 +44,119 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
   const [showCompletion, setShowCompletion] = useState(false);
   const [flashVerse, setFlashVerse] = useState<number | null>(null);
   const [immersive, setImmersive] = useState(false);
+  const { activeSermon } = useUiState();
+  const chapterSermons = React.useMemo(() => getSermonsForChapter(book, chapter), [book, chapter]);
+  const sermonByStartVerse = React.useMemo(() => {
+    const m: Record<number, Sermon> = {};
+    chapterSermons.forEach((s) => { m[s.verseStart] = s; });
+    return m;
+  }, [chapterSermons]);
+  const verseInActiveSermon = (v: number) =>
+    activeSermon && activeSermon.book === book && activeSermon.chapter === chapter
+      && v >= activeSermon.verseStart && v <= activeSermon.verseEnd;
+
+  // When opened via a shared ?sermon=<id> link, auto-load the player + scroll to the passage
+  useEffect(() => {
+    if (!sharedSermon) return;
+    // Defer to next tick so other mount effects (bibleNav) settle first
+    const tid = setTimeout(() => {
+      setUiState({ activeSermon: sharedSermon });
+      setTargetVerse(sharedSermon.verseStart);
+      const url = window.location.pathname + window.location.hash;
+      window.history.replaceState(window.history.state, '', url);
+    }, 0);
+    return () => clearTimeout(tid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-close player if user navigates to a different chapter than the sermon
+  useEffect(() => {
+    if (activeSermon && (activeSermon.book !== book || activeSermon.chapter !== chapter)) {
+      setUiState({ activeSermon: null });
+    }
+  }, [book, chapter, activeSermon]);
+
+  const toggleSermon = (s: Sermon) => {
+    setUiState({ activeSermon: activeSermon && activeSermon.id === s.id ? null : s });
+  };
 
   const key = `${book} ${chapter}`;
-  const highlighted = new Set(state.bibleHighlights[key] ?? []);
-  const displayBlocks = (nav?.startVerse && nav?.endVerse)
-    ? blocks
-        .map(b => ({ ...b, verses: b.verses.filter(v => v.num >= nav.startVerse! && v.num <= nav.endVerse!) }))
-        .filter(b => b.verses.length > 0)
-    : blocks;
+  const highlighted = React.useMemo(
+    () => state.bibleHighlights[key] ?? {},
+    [state.bibleHighlights, key]
+  );
+  const [selectedVerses, setSelectedVerses] = useState<Set<number>>(new Set());
+  const toggleSelect = (num: number) => {
+    setSelectedVerses(prev => {
+      const next = new Set(prev);
+      if (next.has(num)) next.delete(num);
+      else next.add(num);
+      return next;
+    });
+  };
+  const clearSelection = () => setSelectedVerses(new Set());
+
+  // Clear selection when chapter changes
+  useEffect(() => { clearSelection(); }, [book, chapter]);
+
+  const displayBlocks = React.useMemo(
+    () => (nav?.startVerse && nav?.endVerse)
+      ? blocks
+          .map(b => ({ ...b, verses: b.verses.filter(v => v.num >= nav.startVerse! && v.num <= nav.endVerse!) }))
+          .filter(b => b.verses.length > 0)
+      : blocks,
+    [blocks, nav?.startVerse, nav?.endVerse]
+  );
   const verseCount = displayBlocks.reduce((s, b) => s + b.verses.length, 0);
+
+  // Publish selection to UI state so BottomNav can render highlight controls
+  useEffect(() => {
+    const versesInOrder = [...selectedVerses].sort((a, b) => a - b);
+    if (versesInOrder.length === 0) {
+      setUiState({ verseSelection: null });
+      return;
+    }
+    const verseMap: Record<number, string> = {};
+    displayBlocks.forEach(b => b.verses.forEach(v => { verseMap[v.num] = v.text; }));
+    const present = versesInOrder.filter(n => verseMap[n] != null);
+    if (present.length === 0) {
+      setUiState({ verseSelection: null });
+      return;
+    }
+
+    // Compact verse range: "1-3, 5"
+    const ranges: string[] = [];
+    let start = present[0], prev = start;
+    for (let i = 1; i < present.length; i++) {
+      const n = present[i];
+      if (n === prev + 1) { prev = n; continue; }
+      ranges.push(start === prev ? `${start}` : `${start}-${prev}`);
+      start = n; prev = n;
+    }
+    ranges.push(start === prev ? `${start}` : `${start}-${prev}`);
+    const reference = `${formatBookTitle(book)} ${chapter}:${ranges.join(', ')}`;
+    const combinedText = present.map(n => `${n} ${verseMap[n]}`).join(' ');
+    const shareUrl = `https://aaronweaver.github.io/bible/?book=${encodeURIComponent(book)}&chapter=${chapter}&verse=${present[0]}`;
+
+    const colors = present.map(n => highlighted[n]).filter(Boolean) as HighlightColor[];
+    const allSame = colors.length === present.length && colors.every(c => c === colors[0]);
+    const currentColor: HighlightColor | null = allSame && colors.length > 0 ? colors[0] : null;
+    setUiState({
+      verseSelection: {
+        count: present.length,
+        currentColor,
+        reference,
+        combinedText,
+        shareUrl,
+        onPickColor: (c) => {
+          present.forEach(n => setHighlight(key, n, c));
+          clearSelection();
+        },
+        onClose: clearSelection,
+      },
+    });
+    return () => { setUiState({ verseSelection: null }); };
+  }, [selectedVerses, key, highlighted, displayBlocks, book, chapter]);
 
   useEffect(() => {
     let alive = true;
@@ -51,6 +164,23 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
     update({ lastRead: { book, chapter } });
     return () => { alive = false; };
   }, [book, chapter]);
+
+  // While reading a plan, mark each chapter complete as the user moves through it.
+  const prevPlanChapter = useRef<{ book: string; chapter: number } | null>(null);
+  useEffect(() => {
+    if (!nav?.planId || !nav.planReadings || nav.planDay == null || nav.planTotalDays == null) {
+      prevPlanChapter.current = null;
+      return;
+    }
+    const prev = prevPlanChapter.current;
+    if (prev && (prev.book !== book || prev.chapter !== chapter)) {
+      const idx = nav.planReadings.findIndex(r => r.book === prev.book && r.chapter === prev.chapter);
+      if (idx >= 0) {
+        togglePlanReading(nav.planId, nav.planDay, idx, nav.planReadings.length, nav.planTotalDays, true);
+      }
+    }
+    prevPlanChapter.current = { book, chapter };
+  }, [book, chapter, nav?.planId, nav?.planDay, nav?.planTotalDays, nav?.planReadings]);
 
   // Respond to incoming nav (e.g. tapped a verse blockquote in a lesson, or re-tapped Bible tab)
   useEffect(() => {
@@ -78,38 +208,52 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
     }
   }, [verseCount, targetVerse, nav?.verse, nav?.startVerse]);
 
-  // Immersive mode: hide tabs when scrolling through middle of chapter.
-  // Uses a ref so immersive is sticky — only clears at top/bottom, never mid-scroll-up.
+  // Immersive mode: hide tabs while scrolling down; restore on scroll up or at top.
+  // Direction deadband + post-flip lockout prevents jitter when the menu's
+  // open/close animation reshuffles layout and re-fires scroll events.
   const immersiveRef = useRef(false);
-  const transitioningRef = useRef(false);
   useEffect(() => {
     let lastY = window.scrollY;
-    const onScroll = () => {
-      if (programmaticScroll.current || transitioningRef.current) return;
-      const y = window.scrollY;
-      const atTop = y < 60;
-      const atBottom = y + window.innerHeight >= document.documentElement.scrollHeight - 80;
-      let next: boolean;
-      if (atTop || atBottom) {
-        next = false;
-      } else if (y > lastY + 2) {
-        // Scrolling down → go immersive
-        next = true;
-      } else if (y < lastY - 2) {
-        // Scrolling up → reveal menu
-        next = false;
-      } else {
-        next = immersiveRef.current;
-      }
-      if (next !== immersiveRef.current) {
-        immersiveRef.current = next;
-        transitioningRef.current = true;
-        setTimeout(() => { transitioningRef.current = false; }, 400);
-        setImmersive(next);
-        setUiState({ immersive: next });
-      }
-      lastY = y;
+    let dir = 0;
+    let dirStartY = lastY;
+    let lockUntil = 0;
+    const FLIP_PX = 12;
+    const LOCK_MS = 350;
+
+    const setImm = (v: boolean) => {
+      immersiveRef.current = v;
+      setImmersive(v);
+      setUiState({ immersive: v });
+      lockUntil = performance.now() + LOCK_MS;
     };
+
+    const onScroll = () => {
+      if (programmaticScroll.current) return;
+      const now = performance.now();
+      const y = Math.max(0, window.scrollY);
+      const prevY = lastY;
+      lastY = y;
+      const dy = y - prevY;
+      if (dy === 0) return;
+
+      if (y < 40) {
+        if (immersiveRef.current && now >= lockUntil) setImm(false);
+        dir = 0;
+        dirStartY = y;
+        return;
+      }
+
+      if (now < lockUntil) return;
+
+      const d = dy > 0 ? 1 : -1;
+      if (d !== dir) { dir = d; dirStartY = prevY; }
+      const moved = Math.abs(y - dirStartY);
+      if (moved < FLIP_PX) return;
+
+      if (d > 0 && !immersiveRef.current) setImm(true);
+      else if (d < 0 && immersiveRef.current) setImm(false);
+    };
+
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', onScroll);
@@ -118,21 +262,72 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
     };
   }, []);
 
-  const maxChapter = BIBLE_BOOKS.find((b) => b.name === book)?.chapters ?? 1;
-  const prevChapter = () => { if (chapter > 1) { setChapter(chapter - 1); window.scrollTo(0, 0); } };
-  const nextChapter = () => { if (chapter < maxChapter) { setChapter(chapter + 1); window.scrollTo(0, 0); } };
+  const bookIdx = BIBLE_BOOKS.findIndex((b) => b.name === book);
+  const maxChapter = BIBLE_BOOKS[bookIdx]?.chapters ?? 1;
+
+  const goTo = (b: string, c: number) => { setBook(b); setChapter(c); window.scrollTo(0, 0); };
+
+  // Index of the currently-shown chapter within the active plan reading list (if any)
+  const planReadingIdx = nav?.planReadings
+    ? nav.planReadings.findIndex(r => r.book === book && r.chapter === chapter)
+    : -1;
+  // Currently reading a chapter that belongs to the active plan day's selection.
+  const inPlanReadings = !!nav?.planId && !!nav?.planReadings && planReadingIdx >= 0;
+
+  // Within a plan, Prev/Next walk the day's reading selection (not adjacent chapters).
+  const canPrev = inPlanReadings ? planReadingIdx > 0 : (chapter > 1 || bookIdx > 0);
+  const canNext = inPlanReadings ? true : (chapter < maxChapter || bookIdx < BIBLE_BOOKS.length - 1);
+
+  const finishReadingSelection = () => {
+    if (!nav?.planId || nav.planDay == null || nav.planTotalDays == null) return;
+    const alreadyDone = state.readingPlans[nav.planId]?.completedDays?.includes(nav.planDay) ?? false;
+    if (!alreadyDone) {
+      markPlanDayComplete(nav.planId, nav.planDay, nav.planTotalDays, nav.planReadings?.length);
+    }
+    setShowCompletion(true);
+  };
+
+  const prevChapter = () => {
+    if (inPlanReadings) {
+      if (planReadingIdx > 0) {
+        const r = nav!.planReadings![planReadingIdx - 1];
+        goTo(r.book, r.chapter);
+      }
+      return;
+    }
+    if (chapter > 1) { goTo(book, chapter - 1); return; }
+    const pb = BIBLE_BOOKS[bookIdx - 1];
+    if (pb) goTo(pb.name, pb.chapters);
+  };
+
+  const nextChapter = () => {
+    if (inPlanReadings) {
+      const readings = nav!.planReadings!;
+      if (planReadingIdx < readings.length - 1) {
+        const r = readings[planReadingIdx + 1];
+        goTo(r.book, r.chapter);
+      } else {
+        // End of the day's reading selection — show the completion sheet.
+        finishReadingSelection();
+      }
+      return;
+    }
+    if (chapter < maxChapter) { goTo(book, chapter + 1); return; }
+    const nb = BIBLE_BOOKS[bookIdx + 1];
+    if (nb) goTo(nb.name, 1);
+  };
 
   // Keep bibleNav in sync so BottomNav can render the chapter bar
   useEffect(() => {
     setUiState({
       bibleNav: {
-        book, chapter, maxChapter,
+        book, chapter, maxChapter, canPrev, canNext,
         onPrev: prevChapter,
         onNext: nextChapter,
         onPicker: () => setShowPicker(true),
       },
     });
-  }, [book, chapter, maxChapter]);
+  }, [book, chapter, maxChapter, canPrev, canNext]);
 
   const handleNavigate = ({ book: b, chapter: c, verse: v }: { book: string; chapter: number; verse: number }) => {
     setBook(b);
@@ -143,8 +338,65 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
 
   const verseLayout = state.prefs.verseLayout ?? 'paragraph';
 
+  const inPlan = !!nav?.planId && nav.planDay != null && nav.planTotalDays != null;
+  const planColor = inPlan ? t.palette[nav!.planAccentIndex ?? 0] : t.ink;
+  const planReadingsCount = nav?.planReadings?.length ?? 0;
+  // Current reading position within the day (1-based), so it reads 1/3 not 0/3.
+  const planReadingPos = planReadingIdx >= 0 ? planReadingIdx + 1 : 1;
+
   return (
     <div style={{ paddingBottom: 24 }}>
+      {inPlan && (
+        <div
+          className="safe-top"
+          style={{
+            position: 'sticky', top: 0, zIndex: 30,
+            background: t.bg,
+            borderBottom: `0.5px solid ${t.rule}`,
+            padding: '10px 14px',
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}
+        >
+          <button
+            onClick={() => navigate(nav!.returnTo!)}
+            aria-label="Back to plan"
+            style={{
+              background: 'none', border: 'none', padding: 6,
+              cursor: 'pointer', display: 'flex', alignItems: 'center',
+              color: planColor,
+            }}
+          >
+            <Icon name="chev-l" size={20} color={planColor} />
+          </button>
+          <div style={{
+            flex: 1, display: 'flex', alignItems: 'center', gap: 8,
+            font: `600 13px ${t.fontUi}`, color: planColor,
+            letterSpacing: 0.3, textTransform: 'uppercase',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}>
+            <span>Day {nav!.planDay} of {nav!.planTotalDays}</span>
+            {nav!.planTitle && (
+              <span style={{
+                color: t.inkMute, textTransform: 'none',
+                font: `italic 13px ${t.fontBody}`, letterSpacing: 0,
+                overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
+                · {nav!.planTitle}
+              </span>
+            )}
+          </div>
+          {planReadingsCount > 0 && (
+            <div style={{
+              padding: '4px 10px', borderRadius: 999,
+              background: `${planColor}14`, color: planColor,
+              font: `600 12px ${t.fontUi}`,
+            }}>
+              {planReadingPos}/{planReadingsCount}
+            </div>
+          )}
+        </div>
+      )}
+
       <div style={{
         overflow: 'hidden',
         opacity: immersive ? 0 : 1,
@@ -152,8 +404,10 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
         transition: 'opacity 0.25s ease, max-height 0.3s ease',
         pointerEvents: immersive ? 'none' : 'auto',
       }}>
-        <TopBar t={t} eyebrow="Bible"
-          right={<DarkToggle t={t} darkMode={dark} onToggle={toggleDark} />} />
+        {!inPlan && (
+          <TopBar t={t} eyebrow="Bible"
+            right={<DarkToggle t={t} darkMode={dark} onToggle={toggleDark} />} />
+        )}
 
         <div style={{ padding: '0 22px 6px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <button onClick={() => setShowPicker(true)} style={{
@@ -170,9 +424,35 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
             <CircleBtn t={t}><Icon name="settings" size={16} color={t.inkSoft} /></CircleBtn>
           </div>
         </div>
+
+        {chapterSermons.length > 0 && (
+          <div style={{ padding: '4px 22px 0' }}>
+            {chapterSermons.map((s) => {
+              const isActive = !!(activeSermon && activeSermon.id === s.id);
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => toggleSermon(s)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    background: isActive ? accent.c : `${accent.c}14`,
+                    color: isActive ? accent.on : accent.c,
+                    border: 'none', cursor: 'pointer',
+                    padding: '7px 14px 7px 10px',
+                    borderRadius: 999,
+                    font: `600 12px ${t.fontUi}`, letterSpacing: 0.2,
+                  }}
+                >
+                  <Icon name="play" size={12} color={isActive ? accent.on : accent.c} filled />
+                  {isActive ? 'Now playing: ' : 'Sermon available: '}{s.title}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {nav?.returnTo && (
+      {nav?.returnTo && !inPlan && (
         <button
           onClick={() => navigate(nav.returnTo!)}
           style={{
@@ -207,19 +487,26 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
                   }}>{block.title}</h2>
                 )}
                 {block.verses.map(({ num, text }) => {
-                  const isHL = highlighted.has(num);
+                  const hlColor = highlighted[num] as HighlightColor | undefined;
+                  const isHL = !!hlColor;
+                  const hlHex = hlColor ? HIGHLIGHT_COLORS[hlColor] : null;
+                  const isSelected = selectedVerses.has(num);
+                  const sermonHere = sermonByStartVerse[num];
+                  const inActive = verseInActiveSermon(num);
                   return (
                     <div key={num}
                       ref={(el) => { verseRefs.current[num] = el; }}
-                      onClick={() => toggleHighlight(key, num)}
+                      onClick={() => toggleSelect(num)}
                       style={{
                         display: 'flex', gap: 14,
                         alignItems: 'flex-start', cursor: 'pointer',
                         background: flashVerse === num
-                          ? (dark ? '#fbbf2422' : `${accent.c}22`)
+                          ? (hlHex ? `${hlHex}55` : (dark ? '#fbbf2422' : `${accent.c}22`))
                           : isHL
-                            ? (dark ? '#fbbf2418' : `${accent.c}18`)
-                            : (nav?.verse === num ? (dark ? '#fbbf2412' : `${accent.c}12`) : 'transparent'),
+                            ? `${hlHex}33`
+                            : inActive
+                              ? `${accent.c}10`
+                              : (nav?.verse === num ? (dark ? '#fbbf2412' : `${accent.c}12`) : 'transparent'),
                         borderRadius: 4, margin: '0 -4px', padding: '5px 4px',
                         transition: 'background 0.15s',
                       }}>
@@ -228,7 +515,21 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
                         minWidth: 22, textAlign: 'right', paddingTop: `${3 * fontScale}px`,
                         flexShrink: 0, letterSpacing: 0.3,
                       }}>{num}</span>
-                      <span style={{ flex: 1, font: `400 ${17 * fontScale}px/1.65 ${t.fontBody}` }}>
+                      <span style={{
+                        flex: 1, font: `400 ${17 * fontScale}px/1.65 ${t.fontBody}`,
+                        textDecorationLine: (isHL || isSelected) ? 'underline' : 'none',
+                        textDecorationStyle: isSelected && !isHL ? 'dotted' : 'solid',
+                        textDecorationColor: isHL && hlHex ? hlHex : (isSelected ? accent.c : undefined),
+                        textDecorationThickness: (isHL || isSelected) ? 2 : undefined,
+                        textUnderlineOffset: 4,
+                      }}>
+                        {sermonHere && (
+                          <SermonBadge
+                            t={t} accent={accent} sermon={sermonHere}
+                            active={!!(activeSermon && activeSermon.id === sermonHere.id)}
+                            onClick={(e) => { e.stopPropagation(); toggleSermon(sermonHere); }}
+                          />
+                        )}
                         {text}
                       </span>
                     </div>
@@ -252,23 +553,42 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
                   textAlign: 'left',
                 }}>
                   {block.verses.map(({ num, text }) => {
-                    const isHL = highlighted.has(num);
+                    const hlColor = highlighted[num] as HighlightColor | undefined;
+                    const isHL = !!hlColor;
+                    const hlHex = hlColor ? HIGHLIGHT_COLORS[hlColor] : null;
+                    const isSelected = selectedVerses.has(num);
+                    const sermonHere = sermonByStartVerse[num];
+                    const inActive = verseInActiveSermon(num);
                     return (
                       <span key={num}
                         ref={(el) => { verseRefs.current[num] = el; }}
-                        onClick={() => toggleHighlight(key, num)} style={{
+                        onClick={() => toggleSelect(num)} style={{
                           cursor: 'pointer',
                           background: flashVerse === num
-                            ? (dark ? '#fbbf2488' : `${accent.c}aa`)
+                            ? (hlHex ? `${hlHex}88` : (dark ? '#fbbf2488' : `${accent.c}aa`))
                             : isHL
-                              ? (dark ? '#fbbf2455' : `${accent.c}66`)
-                              : (nav?.verse === num ? (dark ? '#fbbf2433' : `${accent.c}44`) : 'transparent'),
+                              ? `${hlHex}55`
+                              : inActive
+                                ? `${accent.c}18`
+                                : (nav?.verse === num ? (dark ? '#fbbf2433' : `${accent.c}44`) : 'transparent'),
+                          textDecorationLine: (isHL || isSelected) ? 'underline' : 'none',
+                          textDecorationStyle: isSelected && !isHL ? 'dotted' : 'solid',
+                          textDecorationColor: isHL && hlHex ? hlHex : (isSelected ? accent.c : undefined),
+                          textDecorationThickness: (isHL || isSelected) ? 2 : undefined,
+                          textUnderlineOffset: 4,
                           borderRadius: 3, padding: '1px 2px', transition: 'background 0.15s',
                         }}>
                         <sup style={{
                           font: `500 11px ${t.fontUi}`, color: t.inkMute,
                           marginRight: 4, verticalAlign: 'super', letterSpacing: 0.4,
                         }}>{num}</sup>
+                        {sermonHere && (
+                          <SermonBadge
+                            t={t} accent={accent} sermon={sermonHere}
+                            active={!!(activeSermon && activeSermon.id === sermonHere.id)}
+                            onClick={(e) => { e.stopPropagation(); toggleSermon(sermonHere); }}
+                          />
+                        )}
                         {text}{' '}
                       </span>
                     );
@@ -292,7 +612,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
               <>
                 <button
                   onClick={() => {
-                    markPlanDayComplete(nav.planId!, nav.planDay!, nav.planTotalDays!);
+                    markPlanDayComplete(nav.planId!, nav.planDay!, nav.planTotalDays!, nav.planReadings?.length);
                     setShowCompletion(true);
                   }}
                   style={{
@@ -366,6 +686,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
         />
       )}
 
+
     </div>
   );
 }
@@ -381,7 +702,7 @@ function NavigationPicker({ t, accent, initialBook, initialChapter, onNavigate, 
   onNavigate: (nav: { book: string; chapter: number; verse: number }) => void;
   onClose: () => void;
 }) {
-  const [step, setStep] = useState<PickerStep>('book');
+  const [step, setStep] = useState<PickerStep>('chapter');
   const [pickerBook, setPickerBook] = useState(initialBook);
   const [pickerChapter, setPickerChapter] = useState(initialChapter);
   const [verseCount, setVerseCount] = useState(0);

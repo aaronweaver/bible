@@ -99,13 +99,17 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
   // Clear selection when chapter changes
   useEffect(() => { clearSelection(); }, [book, chapter]);
 
+  // In a plan, the verse range belongs to the reading being shown, not just the first one.
+  const planReading = nav?.planReadings?.find(r => r.book === book && r.chapter === chapter);
+  const rangeStart = planReading ? planReading.startVerse : nav?.startVerse;
+  const rangeEnd = planReading ? planReading.endVerse : nav?.endVerse;
   const displayBlocks = React.useMemo(
-    () => (nav?.startVerse && nav?.endVerse)
+    () => (rangeStart && rangeEnd)
       ? blocks
-          .map(b => ({ ...b, verses: b.verses.filter(v => v.num >= nav.startVerse! && v.num <= nav.endVerse!) }))
+          .map(b => ({ ...b, verses: b.verses.filter(v => v.num >= rangeStart && v.num <= rangeEnd) }))
           .filter(b => b.verses.length > 0)
       : blocks,
-    [blocks, nav?.startVerse, nav?.endVerse]
+    [blocks, rangeStart, rangeEnd]
   );
   const verseCount = displayBlocks.reduce((s, b) => s + b.verses.length, 0);
 
@@ -317,13 +321,19 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
     if (nb) goTo(nb.name, 1);
   };
 
+  // Always call the latest handlers: they close over plan state (nav.planReadings),
+  // which can change without book/chapter changing (e.g. opening a plan reading on
+  // the chapter already shown). A stale handler would fall back to plain next-chapter.
+  const navHandlers = useRef({ prev: prevChapter, next: nextChapter });
+  navHandlers.current = { prev: prevChapter, next: nextChapter };
+
   // Keep bibleNav in sync so BottomNav can render the chapter bar
   useEffect(() => {
     setUiState({
       bibleNav: {
         book, chapter, maxChapter, canPrev, canNext,
-        onPrev: prevChapter,
-        onNext: nextChapter,
+        onPrev: () => navHandlers.current.prev(),
+        onNext: () => navHandlers.current.next(),
         onPicker: () => setShowPicker(true),
       },
     });

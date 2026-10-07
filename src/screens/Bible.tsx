@@ -681,7 +681,7 @@ export function Bible({ t, accent }: { t: Theme; accent: { c: string; on: string
           totalDays={nav.planTotalDays}
           dayNum={nav.planDay}
           onNext={nav.planDay < nav.planTotalDays
-            ? () => { setShowCompletion(false); navigate(nav.returnTo!); }
+            ? () => { setShowCompletion(false); navigate(`/plan/${nav.planId}/day/${nav.planDay! + 1}`); }
             : undefined}
           onClose={() => { setShowCompletion(false); navigate(nav.returnTo!); }}
         />
